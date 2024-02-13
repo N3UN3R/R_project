@@ -41,12 +41,31 @@ Fahrzeuge_OEM2_Typ21.csv
 
 # Geodaten
 
+Tier2_Werke_2017-07-11_v1.2_TrR.csv
 PLZ 	ORT	Werk	Breitengrad	L„ngengrad
-![grafik](https://github.com/N3UN3R/R_project/assets/77114278/f8603f49-e7cf-4650-ab7c-faad5c6b1a2e)
+
+Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv
+X	Postleitzahl	Gemeinde	Laengengrad	Breitengrad
+
+
+# Logistikverzug
+Komponente_K7.csv
+IDNummer	Produktionsdatum	Herstellernummer	Werksnummer	Fehlerhaft
+
+Logistikverzug_K7.csv
+IDNummer	Wareneingang	Herstellernummer	Werksnummer	Fehlerhaft
 
 
 # Komponenten folder
 Bestandteile_Komponente_K1BE1.cvs
 
 ID_T1	ID_T2	ID_T3	ID_T4	ID_K1BE1
+
+
+
+# Zulassungen alle Fahrzeuge
+Zulassungen_alle_Fahrzeuge.csv
+	xx IDNummer	Gemeinden	Zulassung
+
+
 
