@@ -61,7 +61,9 @@ Bestandteile_Komponente_K1BE1.cvs
 
 ID_T1	ID_T2	ID_T3	ID_T4	ID_K1BE1
 
+Komponente_K1BE1.cvs
 
+,"X1","ID_Motor","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung","Produktionsdatum_Origin_01011970","origin"
 
 # Zulassungen alle Fahrzeuge
 Zulassungen_alle_Fahrzeuge.csv
