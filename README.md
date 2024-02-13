@@ -28,10 +28,15 @@ Einzelteil_T16.csv
 # Fahrzeug
 
 Bestandteile_Fahrzeuge_OEM1_Typ11.csv
+
 ID_Karosserie	ID_Schaltung	ID_Sitze	ID_Motor	ID_Fahrzeug
 
 Fahrzeuge_OEM1_Typ11.csv
 ,"X1","ID_Fahrzeug","Produktionsdatum","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung"
+
+Fahrzeuge_OEM2_Typ21.csv
+,"X1","ID_Fahrzeug","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung","Produktionsdatum_Origin_01011970","origin"
+
 
 
 
