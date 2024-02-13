@@ -1,5 +1,7 @@
 ## analysis of needed data
 
+nachfolgend sind für jeden Ordner und innerhalb des Ordners die Spaltenbezeichnungen der Datensätze aufgelistet
+
 # Analysing which dataset contain needed information
 
 "Bestandteile_Fahrzeuge_OEM1_Typ11" 
