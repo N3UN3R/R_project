@@ -45,5 +45,8 @@ PLZ 	ORT	Werk	Breitengrad	L„ngengrad
 ![grafik](https://github.com/N3UN3R/R_project/assets/77114278/f8603f49-e7cf-4650-ab7c-faad5c6b1a2e)
 
 
+# Komponenten folder
+Bestandteile_Komponente_K1BE1.cvs
 
+ID_T1	ID_T2	ID_T3	ID_T4	ID_K1BE1
 
