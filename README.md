@@ -39,6 +39,11 @@ Fahrzeuge_OEM1_Typ11.csv
 Fahrzeuge_OEM2_Typ21.csv
 ,"X1","ID_Fahrzeug","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung","Produktionsdatum_Origin_01011970","origin"
 
+# Geodaten
+
+PLZ 	ORT	Werk	Breitengrad	L„ngengrad
+![grafik](https://github.com/N3UN3R/R_project/assets/77114278/f8603f49-e7cf-4650-ab7c-faad5c6b1a2e)
+
 
 
 
