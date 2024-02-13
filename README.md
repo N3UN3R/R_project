@@ -1,3 +1,11 @@
+
+# task
+Sie und Ihr Team bekommen von Ihrem Vorgesetzten die Aufgabe, die Anzahl an Ersatzeinzelteile für das kommende Kalenderjahr zu kalkulieren.
+Analysieren Sie die Daten aus den letzten drei Jahren (2014 - einschließlich 2016).
+Sie können davon ausgehen, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie auch zugelassen worden sind.
+In den Städten Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen werden Werkstätten von Ihnen betrieben
+
+
 ## analysis of needed data
 
 nachfolgend sind für jeden Ordner und innerhalb des Ordners die Spaltenbezeichnungen der Datensätze aufgelistet
