@@ -65,6 +65,12 @@ Komponente_K1BE1.cvs
 
 ,"X1","ID_Motor","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung","Produktionsdatum_Origin_01011970","origin"
 
+Komponente_K4.cvs
+
+X1	ID_Karosserie.x	Produktionsdatum.x	Herstellernummer.x	Werksnummer.x	Fehlerhaft.x	Fehlerhaft_Datum.x	Fehlerhaft_Fahrleistung.x	ID_Karosserie.y	Produktionsdatum.y	Herstellernummer.y	Werksnummer.y	Fehlerhaft.y	Fehlerhaft_Datum.y	Fehlerhaft_Fahrleistung.y
+![image](https://github.com/N3UN3R/R_project/assets/159942443/bed729c2-72dd-4770-a4c9-77261a59e399)
+
+
 # Zulassungen alle Fahrzeuge
 Zulassungen_alle_Fahrzeuge.csv
 	xx IDNummer	Gemeinden	Zulassung
