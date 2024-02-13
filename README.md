@@ -25,4 +25,13 @@ Einzelteil_T16.csv
 "X1" | | "ID_T16.x" | | "Produktionsdatum.x" | | "Herstellernummer.x" | | "Werksnummer.x" | | "Fehlerhaft.x" | | "Fehlerhaft_Datum.x" | | "Fehlerhaft_Fahrleistung.x" | | "ID_T16.y" | | "Produktionsdatum.y" | | "Herstellernummer.y" | | "Werksnummer.y" | | "Fehlerhaft.y" | | "Fehlerhaft_Datum.y" | | "Fehlerhaft_Fahrleistung.y" | | "ID_T16" | | "Produktionsdatum" | | "Herstellernummer" | | "Werksnummer" | | "Fehlerhaft" | | "Fehlerhaft_Datum" | | "Fehlerhaft_Fahrleistung"
 
 
-# 
+# Fahrzeug
+
+Bestandteile_Fahrzeuge_OEM1_Typ11.csv
+ID_Karosserie	ID_Schaltung	ID_Sitze	ID_Motor	ID_Fahrzeug
+
+Fahrzeuge_OEM1_Typ11.csv
+,"X1","ID_Fahrzeug","Produktionsdatum","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung"
+
+
+
