@@ -1,6 +1,6 @@
-analysis of needed data
+## analysis of needed data
 
-Analysing which dataset contain needed information
+# Analysing which dataset contain needed information
 
 "Bestandteile_Fahrzeuge_OEM1_Typ11" 
 
@@ -12,7 +12,7 @@ ID_Karosserie	ID_Schaltung	ID_Sitze	ID_Motor	ID_Fahrzeug
 
 Fahrzeuge oem_typ_21,"X1","ID_Fahrzeug","Herstellernummer","Werksnummer","Fehlerhaft","Fehlerhaft_Datum","Fehlerhaft_Fahrleistung","Produktionsdatum_Origin_01011970","origin"
 
-Einzelteil folder
+# Einzelteil folder
 
 contains .txt files and csv files
 
