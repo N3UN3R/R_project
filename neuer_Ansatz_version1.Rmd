@@ -148,42 +148,21 @@ glimpse(fz_ges_filtered_years_bestandteile) #das sind alle bestandteile von Fahr
 
 ```
 
-# Komponenten filtern #ist wahrschein nicht benötigt, da wir alle Teile haben
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-bauteilbezeichnung_keys_temp <- fz_ges_filtered_years_bestandteile %>%
-  select(ID_Karosserie, ID_Schaltung, ID_Sitze, ID_Motor) %>%
-  pivot_longer(cols = everything(), values_to = "values_key") %>% #umbauen der df struktur, values_key = neue Spalte
-  mutate(bt_keys = sapply(strsplit(values_key, "-"), `[`, 1)) %>%
-  .$bt_keys
-
-bauteilbezeichnung_keys <- unique(bauteilbezeichnung_keys_temp) 
-
-glimpse(bauteilbezeichnung_keys)
-
-```
-# testen - kann eigentlich weg
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-
-# Zusammensetzen des Pfades
-file_path <- file.path(getwd(), "Data", "Komponente","Komponente")
-
-print(file_path)
 
 
-list.files(path = file_path)
-
-
-# Auflisten aller Dateien im spezifizierten Ordner, die mit "_K4" enden
-dateien <- list.files(path = file_path, pattern = "_K4\\.csv$", full.names = TRUE)
-
-print(dateien)
-
-```
 # einlesen der Bestandteile
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-Bestandteile_Komponente_K1BE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE1.csv", header = TRUE, data.table = FALSE)
 
+glimpse(fz_ges_filtered_years_bestandteile)
+
+Bestandteile_Komponente_K1BE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE1.csv", header = TRUE, data.table = FALSE)
 glimpse(Bestandteile_Komponente_K1BE1)
+
+ergebnis_df <- inner_join(fz_ges_filtered_years_bestandteile, Bestandteile_Komponente_K1BE1, by = c("ID_Motor" = "ID_K1BE1"))
+
+
+glimpse(ergebnis_df)
+
 
 ```
 
