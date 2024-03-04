@@ -1,0 +1,209 @@
+---
+  title: "Case Study Group 7"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis XXX, Hendrik Dybus"
+date: "07.02.2024"
+output: 
+  html_document:
+  toc: true
+toc_float: true
+code_folding: hide
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Bibliothek
+Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich.
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#Installation und Laden des Pakets "install.load", falls erforderlich. 
+# Hinweis: Das "install.load"-Paket enthält die Funktion install_load.
+
+if(!require(install.load)){
+  install.packages("install.load")
+  library(install.load)
+}
+
+# Installation und Laden der genannten Pakete, falls erforderlich   
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+
+print("hallo")
+```
+# Lese Zulassungen aller Fahrzeuge als erste Datei ein
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+zulassungen_filtered <- fread("C:/Users/lueko/Data Science/Data/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" ) %>% 
+  filter(tolower(Gemeinden) %in% tolower(c("Koeln", "Dortmund", "Bielefeld", "Bonn", "Oberhausen", "Bochum", "Muenster", "Aachen")))
+  #tolower ermöglicht, dass die string sowohl ins capslock, als auch klein oder mischung gefiltert werden
+
+glimpse(zulassungen_filtered)
+```
+
+# Filtere relevante Fahrzeug Ids aus Zulassungen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+fahrzeug_id_zulassungen <- data.frame(IDNummer = zulassungen_filtered$IDNummer)
+glimpse(fahrzeug_id_zulassungen)
+```
+# Lade die Fahrzeugdaten
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+# CSV-Datei einlesen
+# Import of vehicles type 11
+Fahrzeug_Typ11 <- fread("Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+# Import of vehicles type 12
+Fahrzeug_Typ12 <- fread("Data/Fahrzeug/Fahrzeuge_OEM1_Typ12.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+# Import of vehicles type 21
+Fahrzeug_Typ21 <- fread("Data/Fahrzeug/Fahrzeuge_OEM2_Typ21.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+# Import of vehicles type 22
+Fahrzeug_Typ22 <- fread("Data/Fahrzeug/Fahrzeuge_OEM2_Typ22.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+                        
+glimpse(Fahrzeug_Typ11)
+glimpse(Fahrzeug_Typ12)
+glimpse(Fahrzeug_Typ21)
+glimpse(Fahrzeug_Typ22)
+
+```
+# Daten nach den IDs in fahrzeug_id_zulassungen filtern
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+oem_typ11_filtered <- Fahrzeug_Typ11 %>%
+  filter(ID_Fahrzeug %in% fahrzeug_id_zulassungen$IDNummer)
+
+oem_typ12_filtered <- Fahrzeug_Typ12 %>%
+  filter(ID_Fahrzeug %in% fahrzeug_id_zulassungen$IDNummer)
+
+oem_typ21_filtered <- Fahrzeug_Typ21 %>%
+  filter(ID_Fahrzeug %in% fahrzeug_id_zulassungen$IDNummer)
+
+oem_typ22_filtered <- Fahrzeug_Typ22 %>%
+  filter(ID_Fahrzeug %in% fahrzeug_id_zulassungen$IDNummer)
+
+glimpse(oem_typ11_filtered)
+glimpse(oem_typ12_filtered)
+glimpse(oem_typ21_filtered)
+glimpse(oem_typ22_filtered)
+```
+# filtere nach fehlerhaften Fahrzeugen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+oem_typ11_fehlerhaft <- oem_typ11_filtered %>%
+  filter(Fehlerhaft == 1)
+
+oem_typ12_fehlerhaft <- oem_typ12_filtered %>%
+  filter(Fehlerhaft == 1)
+
+oem_typ21_fehlerhaft <- oem_typ21_filtered %>%
+  filter(Fehlerhaft == 1)
+
+oem_typ22_fehlerhaft <- oem_typ22_filtered %>%
+  filter(Fehlerhaft == 1)
+
+
+glimpse(oem_typ11_fehlerhaft)
+glimpse(oem_typ12_fehlerhaft)
+glimpse(oem_typ21_fehlerhaft)
+glimpse(oem_typ22_fehlerhaft)
+```
+
+# filtere nach benötigten Jahren
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+# Auswahl der Spalten "ID_Fahrzeug" und "Fehlerhaft_Datum" aus jedem Dataframe
+oem_typ11_auswahl <- select(oem_typ11_fehlerhaft, ID_Fahrzeug, Fehlerhaft_Datum)
+oem_typ12_auswahl <- select(oem_typ12_fehlerhaft, ID_Fahrzeug, Fehlerhaft_Datum)
+oem_typ21_auswahl <- select(oem_typ21_fehlerhaft, ID_Fahrzeug, Fehlerhaft_Datum)
+oem_typ22_auswahl <- select(oem_typ22_fehlerhaft, ID_Fahrzeug, Fehlerhaft_Datum)
+
+# Zusammenführen der ausgewählten Dataframes zu einem neuen Dataframe
+fahrzeuge_gesamt_filtered <- bind_rows(oem_typ11_auswahl, oem_typ12_auswahl, oem_typ21_auswahl, oem_typ22_auswahl)
+glimpse(fahrzeuge_gesamt_filtered)
+
+# Stellen Sie sicher, dass 'Fehlerhaft_Datum' als Datum interpretiert wird
+fahrzeuge_gesamt_filtered$Fehlerhaft_Datum <- as.Date(fahrzeuge_gesamt_filtered$Fehlerhaft_Datum)
+
+# Datensatz nach den Jahren 2014 bis einschließlich 2016 filtern
+fahrzeuge_ges_filtered_years <- fahrzeuge_gesamt_filtered %>%
+  filter(year(Fehlerhaft_Datum) >= 2014 & year(Fehlerhaft_Datum) <= 2016)
+
+glimpse(fahrzeuge_ges_filtered_years)
+```
+# Fahrzeug Bestandteile auslesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+bestandteile_Typ11 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", header = TRUE, data.table = FALSE)
+bestandteile_Typ12 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", header = TRUE, data.table = FALSE)
+bestandteile_Typ21 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv", header = TRUE, data.table = FALSE)
+bestandteile_Typ22 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv", header = TRUE, data.table = FALSE)
+
+glimpse(bestandteile_Typ11)
+glimpse(bestandteile_Typ12)
+glimpse(bestandteile_Typ21)
+glimpse(bestandteile_Typ22)
+
+bestandteile_gesamt <- bind_rows(bestandteile_Typ11, bestandteile_Typ12, bestandteile_Typ21, bestandteile_Typ22)
+
+glimpse(bestandteile_gesamt)
+
+fz_ges_filtered_years_bestandteile <- inner_join(bestandteile_gesamt, fahrzeuge_ges_filtered_years, by = "ID_Fahrzeug")
+
+glimpse(fz_ges_filtered_years_bestandteile) #das sind alle bestandteile von Fahrzeugen, die an Orten unserer Werkstätten fehlerhaft sind
+
+```
+
+# Komponenten filtern #ist wahrschein nicht benötigt, da wir alle Teile haben
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+bauteilbezeichnung_keys_temp <- fz_ges_filtered_years_bestandteile %>%
+  select(ID_Karosserie, ID_Schaltung, ID_Sitze, ID_Motor) %>%
+  pivot_longer(cols = everything(), values_to = "values_key") %>% #umbauen der df struktur, values_key = neue Spalte
+  mutate(bt_keys = sapply(strsplit(values_key, "-"), `[`, 1)) %>%
+  .$bt_keys
+
+bauteilbezeichnung_keys <- unique(bauteilbezeichnung_keys_temp) 
+
+glimpse(bauteilbezeichnung_keys)
+
+```
+# testen - kann eigentlich weg
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+# Zusammensetzen des Pfades
+file_path <- file.path(getwd(), "Data", "Komponente","Komponente")
+
+print(file_path)
+
+
+list.files(path = file_path)
+
+
+# Auflisten aller Dateien im spezifizierten Ordner, die mit "_K4" enden
+dateien <- list.files(path = file_path, pattern = "_K4\\.csv$", full.names = TRUE)
+
+print(dateien)
+
+```
+# einlesen der Bestandteile
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+Bestandteile_Komponente_K1BE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE1.csv", header = TRUE, data.table = FALSE)
+
+glimpse(Bestandteile_Komponente_K1BE1)
+
+```
+
+
+
+
+# einlesen der Bestandteile
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+test2 <-fread("Data/Komponente/Komponente/Komponente_K2LE1.txt", header = TRUE, data.table = FALSE)
+
+glimpse(test2)
+
+```
+
+
+
+# einlesen der Bestandteile
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+test2 <-fread("Data/Komponente/Komponente/Komponente_K2LE1.txt", header = TRUE, data.table = FALSE, quote = "")
+
+glimpse(test2)
+
+```
