@@ -227,13 +227,10 @@ bestandteile_carosserie_K7 <-fread("Data/Komponente/Komponente/Bestandteile_Komp
 #basierend auf dem vorletzten schritt können nun die entsprechenden dataframes gemachted werden
 #über die zuvor identifizierten "unique keys" können wird gematched
 
-print(colnames(bestandteile_Typ11))
-print(colnames(bestandteile_Typ11))
+print(colnames(bestandteile_Typ12))
 
-glimpse(bestandteile_Typ11)
-#glimpse(bestandteile_carosserie_K4)
 
-glimpse(bestandteile_motor_K1DI1)
+
 ```
 #aus komponenten die Bestandteile der Kompoenente matchen--> Einzelteil IDs 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -244,13 +241,193 @@ glimpse(bestandteile_motor_K1DI1)
 
 #nutze semi join, da nur daten von 2. df benötigt werden
 #jeder typ hat eine andere karosserie
-bauteile_carosserie_typ11 <- semi_join(bestandteile_carosserie_K4, bestandteile_Typ11, by = c("ID_K4" = "ID_Karosserie"))
-bauteile_carosserie_typ12 <- semi_join(bestandteile_carosserie_K5, bestandteile_Typ12, by = c("ID_K5" = "ID_Karosserie"))
-bauteile_carosserie_typ21 <- semi_join(bestandteile_carosserie_K6, bestandteile_Typ21, by = c("ID_K6" = "ID_Karosserie"))
-bauteile_carosserie_typ22 <- semi_join(bestandteile_carosserie_K7, bestandteile_Typ22, by = c("ID_K7" = "ID_Karosserie"))
 
+
+# matching karosserie types
+bauteile_carosserie_typ11 <- inner_join(bestandteile_carosserie_K4, bestandteile_Typ11, by = c("ID_K4" = "ID_Karosserie")) %>%
+  #renaming to have a column called ID_Karosserie instead of ID_K4
+  rename(ID_Karosserie = ID_K4) %>%
+  # Auswählen der gewünschten Spalten
+  select(ID_T30, ID_T31, ID_T32, ID_Fahrzeug, ID_Karosserie)
+
+bauteile_carosserie_typ12 <- inner_join(bestandteile_carosserie_K5, bestandteile_Typ12, by = c("ID_K5" = "ID_Karosserie")) %>%
+  rename(ID_Karosserie = ID_K5) %>%
+  select(ID_T30, ID_T31, ID_T33, ID_Fahrzeug, ID_Karosserie)
+
+bauteile_carosserie_typ21 <- inner_join(bestandteile_carosserie_K6, bestandteile_Typ21, by = c("ID_K6" = "ID_Karosserie"))%>%
+  rename(ID_Karosserie = ID_K6) %>%
+  select(ID_T34, ID_T35, ID_T36,ID_T37, ID_Fahrzeug, ID_Karosserie)
+
+bauteile_carosserie_typ22 <- inner_join(bestandteile_carosserie_K7, bestandteile_Typ22, by = c("ID_K7" = "ID_Karosserie"))%>%
+  rename(ID_Karosserie = ID_K7) %>%
+  select(ID_T34, ID_T35, ID_T38,ID_T39,ID_T40, ID_Fahrzeug, ID_Karosserie)
+
+
+#matching
 #typ 11 hat "K3SG1" "K3AG1"als schaltungen
-bauteile_schaltung1_typ11 <- semi_join(bestandteile_schaltung_K3AG1, bestandteile_Typ11, by = c("ID_K3AG1" = "ID_Schaltung"))
+bauteile_schaltung1_typ11 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ11, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3AG1) %>%
+  select(ID_T21, ID_T24, ID_T25, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ11 <- inner_join(bestandteile_schaltung_K3SG1, bestandteile_Typ11, by = c("ID_K3SG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG1) %>%
+  select(ID_T21, ID_T22, ID_T23, ID_Fahrzeug, ID_Schaltung)
+
+#typ 12 hat "K3SG1" "K3AG1"als Schaltungen
+bauteile_schaltung1_typ12 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ12, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3AG1) %>%
+  select(ID_T21, ID_T24, ID_T25, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ12 <- inner_join(bestandteile_schaltung_K3SG1, bestandteile_Typ12, by = c("ID_K3SG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG1) %>%
+  select(ID_T21, ID_T22, ID_T23, ID_Fahrzeug, ID_Schaltung)
+
+#type 21 hat "K3AG2" "K3SG2" als SChaltungen
+bauteile_schaltung1_typ21 <- inner_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3AG2) %>%
+  select(ID_T21, ID_T24, ID_T27, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ21 <- inner_join(bestandteile_schaltung_K3SG2, bestandteile_Typ21, by = c("ID_K3SG2" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG2) %>%
+  select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
+
+#type 22 hat "K3AG2" "K3SG2 als Schaltungen
+bauteile_schaltung1_typ22 <- inner_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung"))%>%
+  rename(ID_Schaltung = ID_K3AG2) %>%
+  select(ID_T21, ID_T24, ID_T27, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ22 <- inner_join(bestandteile_schaltung_K3SG2, bestandteile_Typ21, by = c("ID_K3SG2" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG2) %>%
+  select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
+
+
+#type 11 hat die sitze "K2LE1" "K2ST1"
+bauteile_sitze1_typ11 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ11, by = c("ID_K2LE1" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE1) %>%
+  select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ11 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ11, by = c("ID_K2ST1" = "ID_Sitze"))%>%
+  rename(ID_Sitze = ID_K2ST1) %>%
+  select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
+
+#type 12 hat die sitze "K2LE1" "K2ST1"
+bauteile_sitze1_typ12 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ12, by = c("ID_K2LE1" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE1) %>%
+  select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ12 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ12, by = c("ID_K2ST1" = "ID_Sitze"))%>%
+  rename(ID_Sitze = ID_K2ST1) %>%
+  select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
+
+#type 21 hat die sitze  "K2ST2" "K2LE2"
+bauteile_sitze1_typ21 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ21, by = c("ID_K2LE2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE2) %>%
+  select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ21 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ21, by = c("ID_K2ST2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2ST2) %>%
+  select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
+
+#type 22 hat die sitze  "K2ST2" "K2LE2"
+bauteile_sitze1_typ22 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ22, by = c("ID_K2LE2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE2) %>%
+  select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ22 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ22, by = c("ID_K2ST2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2ST2) %>%
+  select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
+
+
+#type 11 hat die motoren "K1BE1" "K1DI1
+bauteile_motor1_typ11 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ11, by = c("ID_K1BE1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE1) %>%
+  select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ11 <- inner_join(bestandteile_motor_K1DI1, bestandteile_Typ11, by = c("ID_K1DI1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI1) %>%
+  select(ID_T1, ID_T2, ID_T5, ID_T6, ID_Fahrzeug, ID_Motor)
+
+#type 12 hat die motoren "K1BE1" "K1DI1
+bauteile_motor1_typ12 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ12, by = c("ID_K1BE1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE1) %>%
+  select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ12 <- inner_join(bestandteile_motor_K1DI1, bestandteile_Typ12, by = c("ID_K1DI1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI1) %>%
+  select(ID_T1, ID_T2, ID_T5, ID_T6, ID_Fahrzeug, ID_Motor)
+
+#type 21 hat die motoren "K1BE2" "K1DI2"
+bauteile_motor1_typ21 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ21, by = c("ID_K1BE2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE2) %>%
+  select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ21 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ12, by = c("ID_K1DI2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI2) %>%
+  select(ID_T1, ID_T2, ID_T9, ID_T10, ID_Fahrzeug, ID_Motor)
+
+
+
+#type 22 hat die motoren "K1BE2" "K1DI2"
+bauteile_motor1_typ22 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ22, by = c("ID_K1BE2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE2) %>%
+  select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22, by = c("ID_K1DI2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI2) %>%
+  select(ID_T1, ID_T2, ID_T9, ID_T10, ID_Fahrzeug, ID_Motor)
+
+
+""" awri
+
+```
+# hier troubleshooting
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+glimpse(bestandteile_motor_K1BE2)
+
+glimpse(bestandteile_motor_K1DI2)
+
+
+glimpse(bestandteile_Typ22)
+
+
+#bauteile_motor1_typ21 <- semi_join(bestandteile_motor_K1BE2, bestandteile_Typ21, by = c("ID_K1BE2" = "ID_Motor"))
+#bauteile_motor2_typ21 <- semi_join(bestandteile_motor_K1DI2, bestandteile_Typ21, by = c("ID_K1DI2" = "ID_Motor"))
+
+#type 22 hat die motoren "K1BE2" "K1DI2"
+bauteile_motor1_typ22 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ22, by = c("ID_K1BE2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE2) %>%
+  select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22, by = c("ID_K1DI2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI2) %>%
+  select(ID_T1, ID_T2, ID_T9, ID_T10, ID_Fahrzeug, ID_Motor)
+
+
+
+
+glimpse(bauteile_motor1_typ21)
+glimpse(bauteile_motor2_typ21)
+
+#type 12 hat die motoren "K1BE1" "K1DI1
+
+
+
+#type 12 hat die motoren "K1BE1" "K1DI1
+#bauteile_motor1_typ12 <- semi_join(bestandteile_motor_K1BE1, bestandteile_Typ12, by = c("ID_K1BE1" = "ID_Motor"))
+#bauteile_motor2_typ12 <- semi_join(bestandteile_motor_K1DI1, bestandteile_Typ12, by = c("ID_K1DI1" = "ID_Motor"))
+
+
+
+#bauteile_sitze1_typ12 <- semi_join(bestandteile_sitze_K2LE1, bestandteile_Typ12, by = c("ID_K2LE1" = "ID_Sitze"))
+#bauteile_sitze2_typ12 <- semi_join(bestandteile_sitze_K2ST1, bestandteile_Typ12, by = c("ID_K2ST1" = "ID_Sitze"))
+
+
+```
+
+
+
 bauteile_schaltung2_typ11 <- semi_join(bestandteile_schaltung_K3SG1, bestandteile_Typ11, by = c("ID_K3SG1" = "ID_Schaltung"))
 #typ 12 hat "K3SG1" "K3AG1"als Schaltungen
 bauteile_schaltung1_typ12 <- semi_join(bestandteile_schaltung_K3AG1, bestandteile_Typ12, by = c("ID_K3AG1" = "ID_Schaltung"))
@@ -262,36 +439,17 @@ bauteile_schaltung2_typ21 <- semi_join(bestandteile_schaltung_K3SG2, bestandteil
 bauteile_schaltung1_typ22 <- semi_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung"))
 bauteile_schaltung2_typ22 <- semi_join(bestandteile_schaltung_K3SG2, bestandteile_Typ21, by = c("ID_K3SG2" = "ID_Schaltung"))
 
-#type 11 hat die sitze "K2LE1" "K2ST1"
-bauteile_sitze1_typ11 <- semi_join(bestandteile_sitze_K2LE1, bestandteile_Typ11, by = c("ID_K2LE1" = "ID_Sitze"))
-bauteile_sitze2_typ11 <- semi_join(bestandteile_sitze_K2ST1, bestandteile_Typ11, by = c("ID_K2ST1" = "ID_Sitze"))
-#type 12 hat die sitze "K2LE1" "K2ST1"
-bauteile_sitze1_typ12 <- semi_join(bestandteile_sitze_K2LE1, bestandteile_Typ12, by = c("ID_K2LE1" = "ID_Sitze"))
-bauteile_sitze2_typ12 <- semi_join(bestandteile_sitze_K2ST1, bestandteile_Typ12, by = c("ID_K2ST1" = "ID_Sitze"))
-#type 21 hat die sitze  "K2ST2" "K2LE2"
-bauteile_sitze1_typ21 <- semi_join(bestandteile_sitze_K2LE2, bestandteile_Typ21, by = c("ID_K2LE2" = "ID_Sitze"))
-bauteile_sitze2_typ21 <- semi_join(bestandteile_sitze_K2ST2, bestandteile_Typ21, by = c("ID_K2ST2" = "ID_Sitze"))
-#type 22 hat die sitze  "K2ST2" "K2LE2"
-bauteile_sitze1_typ22 <- semi_join(bestandteile_sitze_K2LE2, bestandteile_Typ22, by = c("ID_K2LE2" = "ID_Sitze"))
-bauteile_sitze2_typ22 <- semi_join(bestandteile_sitze_K2ST2, bestandteile_Typ22, by = c("ID_K2ST2" = "ID_Sitze"))
-
-#type 11 hat die motoren "K1BE1" "K1DI1
-bauteile_motor1_typ11 <- semi_join(bestandteile_motor_K1BE1, bestandteile_Typ11, by = c("ID_K1BE1" = "ID_Motor"))
-bauteile_motor2_typ11 <- semi_join(bestandteile_motor_K1DI1, bestandteile_Typ11, by = c("ID_K1DI1" = "ID_Motor"))
-#type 12 hat die motoren "K1BE1" "K1DI1
-bauteile_motor1_typ12 <- semi_join(bestandteile_motor_K1BE1, bestandteile_Typ12, by = c("ID_K1BE1" = "ID_Motor"))
-bauteile_motor2_typ12 <- semi_join(bestandteile_motor_K1DI1, bestandteile_Typ12, by = c("ID_K1DI1" = "ID_Motor"))
-#type 21 hat die motoren "K1BE2" "K1DI2"
-bauteile_motor1_typ21 <- semi_join(bestandteile_motor_K1BE2, bestandteile_Typ21, by = c("ID_K1BE2" = "ID_Motor"))
-bauteile_motor2_typ21 <- semi_join(bestandteile_motor_K1DI2, bestandteile_Typ21, by = c("ID_K1DI2" = "ID_Motor"))
-#type 21 hat die motoren "K1BE2" "K1DI2"
-bauteile_motor1_typ22 <- semi_join(bestandteile_motor_K1BE2, bestandteile_Typ22, by = c("ID_K1BE2" = "ID_Motor"))
-bauteile_motor2_typ22 <- semi_join(bestandteile_motor_K1DI2, bestandteile_Typ22, by = c("ID_K1DI2" = "ID_Motor"))
-```
 
 
 
 
+
+
+
+
+
+
+# das hier ist nur zum testen und müll
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 #basierend auf dem vorletzten schritt können nun die entsprechenden dataframes gemachted werden
 #über die zuvor identifizierten "unique keys" können wird gematched
