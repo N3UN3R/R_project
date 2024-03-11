@@ -185,6 +185,133 @@ part_T10 <- fread("Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T10)
 ```
+##11
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T11.txt")
+txt <- gsub("\t", ",", txt, fixed = TRUE)
+txt <- gsub("\f", "\n", txt, fixed = TRUE)
+part_T11 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 & 
+         year(as.Date(Fehlerhaft_Datum)) >= 2014 & 
+         year(as.Date(Fehlerhaft_Datum)) <= 2016) 
+
+glimpse(part_T11)
+```
+##12, 13, 14, 15
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T12 <- fread("Einzelteil/Einzelteil/Einzelteil_T12.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T12)
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T13 <- fread("Einzelteil/Einzelteil/Einzelteil_T13.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T13)
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T14 <- fread("Einzelteil/Einzelteil/Einzelteil_T14.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T14)
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T15 <- fread("Einzelteil/Einzelteil/Einzelteil_T15.csv", header = TRUE, data.table = FALSE) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+glimpse(part_T15)
+```
+##16 (Ferhlerhaft)
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T16.txt")
+txt <- gsub(" | | ",",",txt, fixed = TRUE)
+txt <- gsub(" ","\n",txt, fixed = TRUE)
+part_T16 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+glimpse(part_T16)
+```
+##17
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T17 <- fread("Einzelteil/Einzelteil/Einzelteil_T17.csv", header = TRUE, data.table = FALSE) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+glimpse(part_T17)
+```
+##18
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T18 <- fread("Einzelteil/Einzelteil/Einzelteil_T18.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T18)
+```
+##19
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T19 <- fread("Einzelteil/Einzelteil/Einzelteil_T19.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T19)
+```
+##20
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T20.txt")
+txt <- gsub(" | | ",",",txt, fixed = TRUE)
+txt <- gsub(" ","\n",txt, fixed = TRUE)
+part_T20 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+    filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T20)
+```
+##21
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T21 <- fread("Einzelteil/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T21)
+```
+##22
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T22.txt")
+txt <- gsub("\"\t\"",",",txt)
+txt <- gsub("\"\t",",",txt)
+txt <- gsub("\t\"",",",txt)
+txt <- gsub("\t",",",txt)
+txt <- gsub("\"\"","\n",txt)
+txt <- gsub("\"","\n",txt)
+part_T22 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+glimpse(part_T22)
+```
+##
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
