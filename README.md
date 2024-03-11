@@ -88,6 +88,9 @@ X1	ID_Karosserie.x	Produktionsdatum.x	Herstellernummer.x	Werksnummer.x	Fehlerhaf
 Zulassungen_alle_Fahrzeuge.csv
 	xx IDNummer	Gemeinden	Zulassung
 
+### Einzelteile
+ 
+##1
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T01.txt")
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
@@ -100,23 +103,88 @@ part_T01 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T01)
 ```
+##2
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T02.txt")
+txt <- gsub("  ",",",txt, fixed = TRUE)
+txt <- gsub("\t","\n",txt, fixed = TRUE)
+part_T02 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
+glimpse(part_T02)
+```
+##3
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T03.txt")
+txt <- gsub("|",",",txt, fixed = TRUE)
+txt <- gsub("\v","\n",txt, fixed = TRUE)
+part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter((Fehlerhaft== 1) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016))) 
 
+glimpse(part_T03)
+```
+##4
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T04 <- fread("Einzelteil/Einzelteil/Einzelteil_T04.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T04)
+```
+##5
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T05 <- fread("Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+glimpse(part_T05)
+```
+##6
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T06 <- fread("Einzelteil/Einzelteil/Einzelteil_T06.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T06)
+```
+##7 (Fehlerhaft)
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T07.txt")
+txt <- gsub("|",",",txt, fixed = TRUE)
+txt <- gsub("\v","\n",txt, fixed = TRUE)
+part_T07 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter((Fehlerhaft== 1) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016))) 
 
+glimpse(part_T07)
+```
+##8
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T08 <- fread("Einzelteil/Einzelteil/Einzelteil_T08.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T08)
+```
+##9 (Fehlerhaft)
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T09.txt")
+txt <- gsub('\\\\', ',', txt, fixed = TRUE)
+txt <- gsub('\"', '\n', txt, fixed = TRUE)
+part_T09 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+glimpse(part_T09)
+```
+##10
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T10 <- fread("Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+glimpse(part_T10)
+```
 
 
 
