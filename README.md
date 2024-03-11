@@ -88,5 +88,38 @@ X1	ID_Karosserie.x	Produktionsdatum.x	Herstellernummer.x	Werksnummer.x	Fehlerhaf
 Zulassungen_alle_Fahrzeuge.csv
 	xx IDNummer	Gemeinden	Zulassung
 
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T01.txt")
+txt <- gsub(" | | ",",",txt, fixed = TRUE)
+txt <- gsub(" ","\n",txt, fixed = TRUE)
+part_T01 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+glimpse(part_T01)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
