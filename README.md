@@ -1,4 +1,5 @@
-# neuer Ansatz Version 2 ist aktuellste
+# neuer Ansatz Version 3 ist aktuellste
+--> endet mit zusammengeführten DataFrames für jeden Fahrzeugtyp
 
 
 # task
