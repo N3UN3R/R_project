@@ -1,5 +1,5 @@
 ## Einzelteile einlesen
-
+#1
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T01.txt")
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
@@ -12,7 +12,7 @@ part_T01 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T01)
 ```
-
+#2
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T02.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -24,7 +24,7 @@ part_T02 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T02)
 ```
-
+#3
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T03.txt")
 txt <- gsub("|",",",txt, fixed = TRUE)
@@ -35,14 +35,14 @@ part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T03)
 ```
-
+#4
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T04 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T04.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T04)
 ```
-
+#5
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T05 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -50,15 +50,14 @@ part_T05 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T05)
 ```
-
+#6
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T06 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T06.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T06)
 ```
-
-
+#7
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T07.txt")
 txt <- gsub("\"\t\"",",",txt)
@@ -73,14 +72,14 @@ part_T07 <- fread(text = txt, sep = ",", quote = "", data.table = FALSE) %>%
 
 glimpse(part_T07)
 ```
-
+#8
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T08 <- fread("Einzelteil/Einzelteil/Einzelteil_T08.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T08)
 ```
-
+#9
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T09.txt")
 txt <- gsub('\\\\', ',', txt, fixed = TRUE)
@@ -103,7 +102,7 @@ part_T09 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T09)
 ```
-
+#10
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T10 <- fread("Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
@@ -111,7 +110,7 @@ part_T10 <- fread("Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T10)
 ```
-
+#11
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T11.txt")
 txt <- gsub("\t", ",", txt, fixed = TRUE)
@@ -123,28 +122,28 @@ part_T11 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T11)
 ```
-
+#12
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T12 <- fread("Einzelteil/Einzelteil/Einzelteil_T12.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T12)
 ```
-
+#13
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T13 <- fread("Einzelteil/Einzelteil/Einzelteil_T13.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T13)
 ```
-
+#14
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T14 <- fread("Einzelteil/Einzelteil/Einzelteil_T14.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T14)
 ```
-
+#15
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T15 <- fread("Einzelteil/Einzelteil/Einzelteil_T15.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -152,7 +151,7 @@ part_T15 <- fread("Einzelteil/Einzelteil/Einzelteil_T15.csv", header = TRUE, dat
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T15)
 ```
-
+#16
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T16.txt")
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
@@ -165,7 +164,7 @@ part_T16 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T16)
 ```
-
+#17
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T17 <- fread("Einzelteil/Einzelteil/Einzelteil_T17.csv", header = TRUE, data.table = FALSE) %>% 
   filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
@@ -175,21 +174,21 @@ part_T17 <- fread("Einzelteil/Einzelteil/Einzelteil_T17.csv", header = TRUE, dat
 
 glimpse(part_T17)
 ```
-
+#18
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T18 <- fread("Einzelteil/Einzelteil/Einzelteil_T18.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T18)
 ```
-
+#19
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T19 <- fread("Einzelteil/Einzelteil/Einzelteil_T19.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T19)
 ```
-
+#20
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T20.txt")
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
@@ -199,14 +198,14 @@ part_T20 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T20)
 ```
-
+#21
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T21 <- fread("Einzelteil/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T21)
 ```
-
+#22
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T22.txt")
 txt <- gsub("\"\t\"",",",txt)
@@ -222,7 +221,7 @@ part_T22 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T22)
 ```
-
+#23
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T23 <- fread("Einzelteil/Einzelteil/Einzelteil_T23.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -230,7 +229,7 @@ part_T23 <- fread("Einzelteil/Einzelteil/Einzelteil_T23.csv", header = TRUE, dat
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T23)
 ```
-
+#24
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T24.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -242,21 +241,21 @@ part_T24 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T24)
 ```
-
+#25
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T25 <- fread("Einzelteil/Einzelteil/Einzelteil_T25.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T25)
 ```
-
+#26
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T26 <- fread("Einzelteil/Einzelteil/Einzelteil_T26.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T26)
 ```
-
+#27
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T27.txt")
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
@@ -267,7 +266,7 @@ part_T27 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T27)
 ```
-
+#30
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T30 <- fread("Einzelteil/Einzelteil/Einzelteil_T30.csv", header = TRUE, data.table = FALSE) %>% 
@@ -278,7 +277,7 @@ part_T30 <- fread("Einzelteil/Einzelteil/Einzelteil_T30.csv", header = TRUE, dat
 
 glimpse(part_T30)
 ```
-
+#31
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T31.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -289,7 +288,7 @@ part_T31 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T31)
 ```
-
+#32
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T32 <- fread("Einzelteil/Einzelteil/Einzelteil_T32.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -297,14 +296,14 @@ part_T32 <- fread("Einzelteil/Einzelteil/Einzelteil_T32.csv", header = TRUE, dat
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T32)
 ```
-
+#33
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T33 <- fread("Einzelteil/Einzelteil/Einzelteil_T33.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T33)
 ```
-
+#34
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T34.txt")
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
@@ -315,7 +314,7 @@ part_T34 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 glimpse(part_T34)
 ```
-
+#35
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T35.txt")
 txt <- gsub("\"", "", txt, fixed = TRUE)  # Entfernen Sie doppelte Anführungszeichen
@@ -328,7 +327,7 @@ part_T35 <- fread(text = txt, sep = ",", data.table = FALSE)
 
 glimpse(part_T35)
 ```
-
+#36
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T36.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -338,16 +337,14 @@ part_T36 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T36)
 ```
-
-
-
+#37
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T37 <- fread("Einzelteil/Einzelteil/Einzelteil_T37.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T37)
 ```
-
+#38
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T38 <- fread("Einzelteil/Einzelteil/Einzelteil_T38.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -355,7 +352,7 @@ part_T38 <- fread("Einzelteil/Einzelteil/Einzelteil_T38.csv", header = TRUE, dat
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T38)
 ```
-
+#39
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T39.txt")
 txt <- gsub("\\\\", ",", txt, fixed = TRUE)
@@ -368,7 +365,7 @@ part_T39 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 glimpse(part_T39)
 ```
 
-
+#40
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T40 <- fread("Einzelteil/Einzelteil/Einzelteil_T40.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
