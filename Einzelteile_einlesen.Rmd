@@ -61,40 +61,16 @@ glimpse(part_T06)
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T07.txt")
-txt <- gsub(" ", "", txt, fixed = TRUE)
-txt <- gsub("\v", "\n", txt, fixed = TRUE)
+txt <- gsub("\"\t\"",",",txt)
+txt <- gsub("\"\t",",",txt)
+txt <- gsub("\t\"",",",txt)
+txt <- gsub("\t",",",txt)
+txt <- gsub("\"\"","\n",txt)
+txt <- gsub("\"","\n",txt)
 part_T07 <- fread(text = txt, sep = ",", quote = "", data.table = FALSE) %>% 
   filter((Fehlerhaft == 1) &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016))) 
 
-glimpse(part_T07)
-```
-
-
-
-
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-library(data.table)
-
-# Daten einlesen und das richtige Trennzeichen angeben (hier wird ein Tabulator angenommen)
-part_T07 <- fread("Einzelteil/Einzelteil/Einzelteil_T07.txt", sep = "\t", quote = "", header = FALSE, data.table = FALSE)
-
-# Filtern und Daten anzeigen
-part_T07 <- part_T07 %>% 
-  filter((Fehlerhaft == 1) &
-         (year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)) 
-
-# Ausgabe der Struktur der gefilterten Daten
-glimpse(part_T07)
-
-
-```
-
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-# Datei einlesen
-part_T07 <- read.table("Einzelteil/Einzelteil/Einzelteil_T07.txt", sep = "\t", header = TRUE, quote = "\"", stringsAsFactors = FALSE)
-
-# Daten anzeigen
 glimpse(part_T07)
 ```
 
@@ -104,6 +80,7 @@ part_T08 <- fread("Einzelteil/Einzelteil/Einzelteil_T08.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T08)
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T09.txt")
 txt <- gsub('\\\\', ',', txt, fixed = TRUE)
