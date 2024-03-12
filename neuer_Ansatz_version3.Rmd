@@ -377,16 +377,28 @@ bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22
 
 ```
 
+#GesamtDataframes für jeden Fahrzeugtyp erstellen
+#aus komponenten die Bestandteile der Kompoenente matchen--> Einzelteil IDs 
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+all_ids_typ11 <- bind_rows(bauteile_carosserie_typ11, bauteile_schaltung1_typ11, bauteile_schaltung2_typ11,
+                           bauteile_sitze1_typ11,bauteile_sitze2_typ11,bauteile_motor1_typ11,bauteile_motor2_typ11)
+
+all_ids_typ12 <- bind_rows(bauteile_carosserie_typ12, bauteile_schaltung1_typ12, bauteile_schaltung2_typ12,
+                           bauteile_sitze1_typ12,bauteile_sitze2_typ12,bauteile_motor1_typ12,bauteile_motor2_typ12)
+
+all_ids_typ21 <- bind_rows(bauteile_carosserie_typ21, bauteile_schaltung1_typ21, bauteile_schaltung2_typ21,
+                           bauteile_sitze1_typ21,bauteile_sitze2_typ21,bauteile_motor1_typ21,bauteile_motor2_typ21)
+
+all_ids_typ22 <- bind_rows(bauteile_carosserie_typ22, bauteile_schaltung1_typ22, bauteile_schaltung2_typ22,
+                           bauteile_sitze1_typ22,bauteile_sitze2_typ22,bauteile_motor1_typ22,bauteile_motor2_typ22)#
 
 
+glimpse(all_ids_typ11)
+glimpse(all_ids_typ12)
+glimpse(all_ids_typ21)
+glimpse(all_ids_typ22)
 
-
-
-
-
-
-
-
+```
 
 
 
