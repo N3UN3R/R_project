@@ -19,30 +19,30 @@ Ihren zugrundeliegenden Datensatz als Tabelle, damit Sie Visualisiertes auch bew
 """
 
 
-# Installing all required packages
+# Überprüfen, ob das 'install.load' Paket installiert ist, und es bei Bedarf installieren. Dieses Paket hilft beim Verwalten der Installation und beim Laden anderer Pakete.
 if(!require("install.load")){
   install.packages("install.load")
 }
 library(install.load)
 
+# Mit der Funktion 'install_load' aus dem 'install.load' Paket mehrere Bibliotheken installieren und laden, die in dieser App verwendet werden. 
+# Dazu gehören Pakete für Datenmanipulation, Erstellung von Diagrammen und interaktive UI-Elemente in der Shiny-App.
+install_load("readr", "shiny", "leaflet", "htmltools", "ggplot2", 
+             "shinythemes", "shinyWidgets", "ggthemes", "tidyverse", "data.table")
 
-install_load("readr", "shiny", "leaflet", "htmltools", "ggplot2", "shinythemes", "shinyWidgets", "ggthemes", "tidyverse", "data.table") 
-#install_load("readr", "shiny", "leaflet", "htmltools", "dplyr", "ggplot2", "shinythemes", "shinyWidgets", "ggthemes" )
+# Laden des Datensatzes in 'final_data'. Passen Sie den Pfad an den Speicherort Ihrer CSV-Datei an.
+final_data <- read.csv("Final_dataset_group_07.csv")
 
-
-#load the data
-#---->>>>>>>final_data <- read.csv("Final_dataset_group_32.csv")<<<<<<<<<<------------
-#final_data <- final_data %>% sample_n(100000)
-
-# Define UI for application
+# Definition der Benutzeroberfläche (UI) für die Anwendung
 ui <- fluidPage(
   
-  # load the font awesome library (necessary for the checkbox group)
-  tags$head(tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css")),             
+  # Externes CSS für zusätzliches Styling einbinden (z.B. Font Awesome Icons für die Checkbox-Gruppe)
+  tags$head(tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css")),
   
-  # Application title
-  titlePanel("Production volumes and field failures"),
+  # Titel der Anwendung, der oben angezeigt wird
+  titlePanel("Einzelteilbestellungsprognose"),
   
+  # Benutzerdefiniertes CSS, um den Körper und die Tabs der App zu stylen
   tags$head(
     tags$style(
       HTML("
@@ -51,7 +51,7 @@ ui <- fluidPage(
           background-color: Lightsteelblue;
         }
         
-        /*change the color of the tab text*/
+        /*Ändern der Farbe des Tab-Textes*/
         .nav-tabs>li>a {
           color: black;
         }
@@ -59,30 +59,26 @@ ui <- fluidPage(
     )
   ),
   
-  # create the sidebar layout
+  # Seitenleistenlayout für Eingabesteuerelemente und Hauptpanel zur Anzeige von Ausgaben
   sidebarLayout(
     sidebarPanel(
       
-      # Copy the line below to make a select box 
-      selectInput("select_mode", label = "App mode", 
-                  choices = list("Sample mode (n = 100.000)" = 1, "Normal mode" = 2), 
+      # Dropdown zur Auswahl des App-Modus mit vordefinierten Optionen
+      selectInput("select_mode", label = "App-Modus", 
+                  choices = list("Beispielmodus (n = 100.000)" = 1, "Normalmodus" = 2), 
                   selected = 1),
       
-      #hr(),
-      #fluidRow(column(3, verbatimTextOutput("value")))
+      # Eingabe für das Zensierungsdatum der Analyse
+      dateInput("censoring_date", "Zensierungsdatum der Analyse", value = max(final_data$earliest_failure_date)), 
       
-      #input for censoring date
-      dateInput("censoring_date", "Censoring date of the analysis", value = max(final_data$earliest_failure_date )), 
+      # Eingabe für den Produktionszeitraum der Fahrzeuge
+      dateRangeInput("production_period", "Produktionszeitraum der Fahrzeuge", start = min(final_data$vehicle_production_date), end = max(final_data$vehicle_production_date)),
       
-      #input for production period
-      dateRangeInput("production_period", "Production period of the vehicles", start = min(final_data$vehicle_production_date), max(final_data$vehicle_production_date)),
-      
-      # create the checkbox group for the car selection
+      # Checkbox-Gruppe für die Fahrzeugauswahl
       checkboxGroupButtons(
-        
         inputId = "selected_vehicle_type",
-        label = "Choose the vehicle type",
-        choices = c("Type 11" = "11","Type 12" = "12"), 
+        label = "Wählen Sie den Fahrzeugtyp",
+        choices = c("Typ 11" = "11", "Typ 12" = "12"), 
         selected = c("11", "12"),
         individual = TRUE,
         checkIcon = list(
@@ -90,53 +86,122 @@ ui <- fluidPage(
           no = tags$i(class = "fa fa-circle-o", style = "color: Lightsteelblue")
         )
       ),
-      img(src = "https://media.licdn.com/dms/image/C4E0BAQHliuj-kkUZ0g/company-logo_200_200/0/1611768200813?e=1686787200&v=beta&t=4mmNNxQ2OmYnTBlisQ4a2BAqk7_F925U9gSGOHuYmgU",
+      # Ein Bild hinzufügen
+      img(src = "URL_zum_Bild",
           height = 200, width = 200, align = "left", style = "padding-top: 30px;")
     ),
     
-    # Main panel
+    # Hauptpanel
     mainPanel(
-      
-      
-      ##OUTPUT HERE
-      tabsetPanel(
-        
-        #Display the map
-        tabPanel("Map",
-                 leafletOutput("map"),
-                 absolutePanel(
-                   top = 250, left = 20,
-                   dropdownButton(
-                     selectInput(inputId = 'map_selection',
-                                 label = 'select which data to show',
-                                 choices = c("Production quantities"="a", "Relative number of field failures in relation to production volume"="b"),
-                                 selected = "a"
-                     ),
-                     circle = TRUE, 
-                     status = "danger",
-                     icon = icon("cog"), 
-                     width = "300px",
-                     tooltip = tooltipOptions(title = "Click to change the display!")
-                   )
-                 )
-                 
-        )
-        
-        ,
-        
-        #Display the plot
-        tabPanel("Boxplot - Time until first Failure",   
-                 plotOutput("plot")),
-        
-        #Display the plot
-        tabPanel("Boxplot - Vehicle Lifespan",   
-                 plotOutput("plot2")),
-        
-        #Display the underlying dataset
-        tabPanel("Underlying dataset",
-                 DT::DTOutput("table"))
-      )
+      # Hier werden die Ausgaben angezeigt: Eine Karte, zwei Arten von Boxplots und eine Datentabelle, die den zugrundeliegenden Datensatz anzeigt
     )
   )
   
 )
+
+
+# Definition der Serverlogik der Shiny-Anwendung
+server <- function(input, output) {
+  
+  # Anpassen der Daten basierend auf den vom Benutzer ausgewählten Werten
+  selected_data <- reactive({
+    
+    # Prüfung des Modus: Normalmodus oder Beispielmodus mit 100.000 Datensätzen
+    if(input$select_mode == 2) {
+      # Normalmodus: Verwenden aller Daten
+      final_data %>%
+        mutate(earliest_failure_date = as.numeric(as.Date(earliest_failure_date))) %>% # Umwandlung des ersten Ausfalldatums in numerische Werte
+        replace_na(list(earliest_failure_date = 0)) %>% # Ersetzen von NA-Werten im ersten Ausfalldatum mit 0
+        filter(vehicle_production_date >= input$production_period[1]) %>% # Filtern nach Start des Produktionszeitraums
+        filter(vehicle_production_date <= input$production_period[2]) %>% # Filtern nach Ende des Produktionszeitraums
+        filter(earliest_failure_date <= as.numeric(input$censoring_date)) %>% # Filtern nach Zensierungsdatum
+        filter(vehicle_type %in% input$selected_vehicle_type) %>% # Filtern nach ausgewähltem Fahrzeugtyp
+        mutate(earliest_failure_date = replace(earliest_failure_date, earliest_failure_date == 0, NA)) %>% # Zurückwandeln der 0 in NA für das erste Ausfalldatum
+        mutate(earliest_failure_date = as.Date(earliest_failure_date, origin = "1970-01-01")) # Umwandlung des ersten Ausfalldatums von numerisch zurück in Datumswerte
+    } else {
+      # Beispielmodus: Verwendung einer Stichprobe von 100.000 Datensätzen
+      final_data %>%
+        sample_n(100000) %>%
+        # Die folgenden Schritte sind identisch mit dem Normalmodus
+        mutate(earliest_failure_date = as.numeric(as.Date(earliest_failure_date))) %>%
+        replace_na(list(earliest_failure_date = 0)) %>%
+        filter(vehicle_production_date >= input$production_period[1]) %>%
+        filter(vehicle_production_date <= input$production_period[2]) %>%
+        filter(earliest_failure_date <= as.numeric(input$censoring_date)) %>%
+        filter(vehicle_type %in% input$selected_vehicle_type) %>%
+        mutate(earliest_failure_date = replace(earliest_failure_date, earliest_failure_date == 0, NA)) %>%
+        mutate(earliest_failure_date = as.Date(earliest_failure_date, origin = "1970-01-01"))        
+    }
+  })
+  
+  # Erstellung einer reaktiven Ausgabe für die Kartendarstellung, abhängig von der Benutzerauswahl
+  data_map <- reactive({
+    if (input$map_selection == "b") {
+      # Berechnung der relativen Anzahl der Feldausfälle im Verhältnis zum Produktionsvolumen
+      group_by(selected_data(), location) %>% 
+        summarise(total = sum(field_failure)/n(), latitude, longitude) %>% 
+        distinct() 
+    } else {
+      # Berechnung der Produktionsmengen
+      group_by(selected_data(), location) %>% 
+        summarise(total = n(), latitude, longitude) %>% 
+        distinct() 
+    }
+  })
+  
+  # Faktor für die Größenanpassung der Kreismarker auf der Karte
+  factor <- reactive({
+    if (input$map_selection == "b")
+    {
+      # Kleinere Größe für die Darstellung relativer Zahlen
+      0.01 
+    } else {
+      # Größere Größe für die Darstellung der Produktionsmengen, abhängig vom Modus
+      if (input$select_mode == 1) {
+        1500  
+      } else {
+        30000 
+      }
+    }
+  })
+  
+  ## Kartendarstellung
+  output$map <- renderLeaflet({
+    data_map() %>%
+      leaflet() %>%
+      addProviderTiles(providers$OpenStreetMap.DE) %>%
+      # Hinzufügen von Kreismarkern, deren Größe relativ zur Gesamtzahl der Autos oder Feldausfälle ist
+      addCircleMarkers(lat = ~latitude, lng = ~longitude, label = ~total, radius = ~total/factor())
+  })
+  
+  # Erstellung des Boxplots aus den ausgewählten Daten für die Zeit bis zum ersten Ausfall
+  output$plot <- renderPlot({
+    ggplot(selected_data(), aes(as.factor(vehicle_type), time_till_first_failure, fill = as.factor(vehicle_type))) +
+      geom_boxplot(na.rm = TRUE) +
+      scale_y_continuous(limits = c(0, 800)) +
+      labs(x = "Fahrzeugtyp", y = "Zeit bis zum ersten Ausfall [Tage]") +
+      ggtitle("Zeit bis zum ersten Ausfall", subtitle = "Boxplot der Zeitspanne zwischen Produktionsdatum und Datum des ersten Ausfalls") +
+      theme_clean() +
+      theme(legend.position="none") 
+  })
+  
+  # Erstellung des Boxplots aus den ausgewählten Daten für die Lebensdauer der Fahrzeuge
+  output$plot2 <- renderPlot({
+    ggplot(selected_data(), aes(as.factor(vehicle_type), vehicle_lifespan, fill = as.factor(vehicle_type))) +
+      geom_boxplot(na.rm = TRUE) +
+      scale_y_continuous(limits = c(0, 600)) +
+      labs(x = "Fahrzeugtyp", y = "Lebensdauer [Tage]") +
+      ggtitle("Fahrzeuglebensdauer", subtitle = "Boxplot der Zeitspanne zwischen Produktionsdatum und Datum des Fahrzeugausfalls") +
+      theme_clean() +
+      theme(legend.position="none") 
+  })
+  
+  # Erstellung der Tabelle zur Anzeige der zugrundeliegenden Daten
+  output$table <- DT::renderDT({
+    DT::datatable(selected_data(), colnames = c("Fahrzeug-ID" = "id_vehicle", "Fahrzeugtyp" = "vehicle_type", "Herstellerwerk" = "plant", "Standort" = "location", "Breitengrad" = "latitude", "Längengrad" = "longitude", "Produktionsdatum" = "vehicle_production_date", "Fahrzeugausfall" = "vehicle_failure", "Datum des Fahrzeugausfalls" = "vehicle_failure_date", "Lebensdauer des Fahrzeugs" = "vehicle_lifespan", "Feldausfall" = "field_failure", "Frühestes Ausfalldatum" = "earliest_failure_date", "Zeit bis zum ersten Ausfall" = "time_till_first_failure")) 
+  })
+}
+
+
+# Starten der Anwendung
+shinyApp(ui = ui, server = server)
