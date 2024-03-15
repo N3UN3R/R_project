@@ -19,7 +19,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "dplyr", "ggplot2",  "knitr","tidyverse","plotly","nortest","moments")
+install_load("readr", "dplyr", "ggplot2", "knitr","tidyverse","plotly","moments")
 
 ```
 
@@ -153,7 +153,7 @@ Der Mittelwert des Verzuges liegt bei ungefähr 3.08 Tagen.
 ```{r, fig.align="center", message = FALSE, warning = FALSE}
 
 
-fig <- plot_ly(x = Verzug_arbeitstage, type = "histogram", nbinsx = 30)
+fig <- plot_ly(x = Verzug_arbeitstage, type = "histogram", nbinsx = 50)
 
 fig <- fig %>% 
   layout(
@@ -171,7 +171,7 @@ fig
 ## Aufgabe 2
 
 
-Frage: Warum ist es sinnvoll, die Ihnen bereitgestellten Daten in separaten Dateien abzulegen und nicht alles in einer riesigen Tabelle abzuspeichern (4 Argumente)? Wie nennt sich das zugrunde liegende Datenbankkonzept? 
+**Warum ist es sinnvoll, die Ihnen bereitgestellten Daten in separaten Dateien abzulegen und nicht alles in einer riesigen Tabelle abzuspeichern? Wie nennt sich das zugrunde liegende Datenbankkonzept?** 
 
 Das zugrundeliegende Datenbankkonzept wird als relationales Datenbankmodell bezeichnet. Dieses bietet folgende Vorteile:
 
@@ -300,7 +300,7 @@ kable(
 
 ## Aufgabe 5 
 
-Sie wollen Ihre Applikation veröffentlichen. Warum ist es gerade dann sinnvoll die Datensätze auf der Datenbank eines Servers abzulegen? 
+**Sie wollen Ihre Applikation veröffentlichen. Warum ist es gerade dann sinnvoll die Datensätze auf der Datenbank eines Servers abzulegen?** 
 
 Verfügbarkeit:
 
@@ -311,7 +311,7 @@ Datenorganisation:
 - Die Verwendung einer Server-Datenbank ermöglicht eine strukturierte Organisation und Speicherung von Daten. Dies erleichtert die Verwaltung, Aktualisierung und Pflege der Daten, selbst wenn die Benutzerzahl begrenzt ist.
 
 
-Warum können Sie die Datensätze nicht auf Ihrem persönlichen Computer ablegen? 
+**Warum können Sie die Datensätze nicht auf Ihrem persönlichen Computer ablegen?**
 
 Begrenzte Ressourcen:
 
@@ -321,7 +321,7 @@ Datenverlust:
 
 - Persönliche Computer sind anfälliger für Datenverlust durch Hardwarefehler, Softwareprobleme oder Diebstahl. Daten, die ausschließlich auf einem persönlichen Computer gespeichert sind, können leichter verloren gehen.
 
-Nennen Sie eine einfache Möglichkeit Ihre Applikation ihrem Kundenkreis zugänglich zu machen?
+**Nennen Sie eine einfache Möglichkeit Ihre Applikation ihrem Kundenkreis zugänglich zu machen?**
 
 - Eine Mölichkeit ist die Bereitstellung über das Internet mittels einer Webanwendung. Benutzer können einfach über ihren Webbrowser auf die Anwendung zugreifen, ohne dass sie zusätzliche Software installieren müssen.
 
