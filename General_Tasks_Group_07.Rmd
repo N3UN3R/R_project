@@ -1,6 +1,6 @@
 ---
 title: "General_Tasks_Group_07"
-author: "Enis Ertekin Johannes XXX"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis Ertekin, Hendrik Dybus"
 date: "2024-02-16"
 output: html_document
 ---
@@ -19,7 +19,8 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "dplyr","plotly", "ggplot2",  "knitr", "modeest","diptest","DescTools", "moments","fitdistrplus","tidyverse", "scales","nortest")
+install_load("readr", "dplyr", "ggplot2",  "knitr","tidyverse","plotly","nortest","moments")
+
 ```
 
 
@@ -36,16 +37,19 @@ Logistikverzug_K7 <- read.csv("DATA/Logistikverzug/Logistikverzug_K7.csv",sep=";
 
 ```
 
-In dieser Aufgabe untersuchen wir die Verteilung des Logistikverzugs der Komponente K7. Zunächst einmal werden die beiden eingelesenden Datasets zu Logistikverzug zusammengefügt. Dies passiert unter der Angabe der IDNummer.
+In dieser Aufgabe untersuchen wir die Verteilung des Logistikverzugs der Komponente K7. Zunächst einmal werden die beiden eingelesenden Datasets zu Logistikverzug zusammengefügt. Dies passiert unter der Angabe der IDNummer. Im nächsten Schritt werden die Produktionsdaten gefiltert, sodass nur die Daten von 2014 bis 2016 betrachtet werden.
 
 
 ```{r,message=FALSE,warning=FALSE}
 
 Logistikverzug <- merge(x = Komponente_K7[,c("IDNummer", "Produktionsdatum")], y = Logistikverzug_K7[ , c("IDNummer","Wareneingang")], by = "IDNummer")
 
+Logistikverzug <- Logistikverzug %>%
+  filter(Produktionsdatum >= as.Date("2014-01-01") & Produktionsdatum <= as.Date("2016-12-31"))
+
 ```
 
-Zur besseren Übersicht und zum Vergleiche wird nun das Datumsformat für das Wareneingang angepasst. Es wird das Format Y-m-d genutzt.
+Zur besseren Übersicht und zum Vergleich wird nun das Datumsformat für den Wareneingang angepasst. Es wird das Format Y-m-d genutzt.
 
 ```{r,message=FALSE,warning=FALSE}
 
@@ -53,36 +57,63 @@ Logistikverzug$Wareneingang <- as.Date(strptime(Logistikverzug$Wareneingang, for
 
 ```
 
-Eine weitere Spalte wird angelegt, die den Differenz zwischen Produktionsdatum und Wareneingang bestimmt, hierbei wurden nach der Differenz der beiden Daten von Produktionsdatum und Wareneingang zusätzlich 2 Tage abgezogen, da der Hersteller 1 Tag für die Übergabe zur Logistikabteilung benötigt und dort ebenfalls 1 Tag benötigt wird für die Versandvorbereitung:
+
+Nun wird der Verzug berechnet. Hierbei ist zu beachten, dass zwischen dem Produktionsdatum und dem Warenausgangsdatum 2 Werktage liegen, da der Hersteller 1 Tag für die Übergabe zur Logistikabteilung und ebenfalls 1 Tag für die Versandvorbereitung benötigt. Da der Sonntag kein Werktag ist, ist dieser von der Rechnung ausgeschlossen. 
 
 ```{r,message=FALSE,warning=FALSE}
 
-Verzug <- as.integer(difftime(Logistikverzug$Wareneingang,Logistikverzug$Produktionsdatum,  units = "days")) -2 
-Logistikverzug <- mutate(Logistikverzug, Verzug)
+Verzug <- as.integer(difftime(Logistikverzug$Wareneingang, Logistikverzug$Produktionsdatum, units = "days")) - 2 
+
+Verzug_arbeitstage <- Verzug[weekdays(Logistikverzug$Wareneingang) != "Sunday"]
 
 ```
 
 Nun wird ein Histogramm mit den Verzugsdaten dargestellt:
+```{r,message=FALSE,warning=FALSE}
 
-```{r, fig.align="center", message = FALSE, warning = FALSE}
-
-hist(Verzug, breaks=10, main="Histogramm des Logistikverzugs", xlab="Verzug in Tagen", ylab="Anzahl")
-
-```
-Das Histogramm deutet darauf hin, dass die logistische Verzögerung einer Normalverteilung folgt. Ein Q-Q-Diagramm kann verwendet werden, um diese Annahme zu überprüfen. Der Q-Q Plot vergleicht die Daten des logistischen Verzugs mit den theoretischen Quantilen. Wenn die empirischen und die theoretischen Quantile der jeweiligen Verteilung nahe beieinander liegen, sind die empirischen Daten wie die angenommene Verteilung verteilt. 
-
-
-```{r, fig.align="center", message = FALSE, warning = FALSE}
-
-qqnorm(Verzug)  
-qqline(Verzug, col="red")
+hist(Verzug_arbeitstage, breaks = 10, main = "Histogramm des Logistikverzugs", xlab = "Verzug in Tagen", ylab = "Anzahl")
 
 ```
 
+Das Histogramm deutet darauf hin, dass die logistische Verzögerung einer Normalverteilung folgen könnte. Dies ist durch eine glockenähnliche Struktur der Balken zu erkennen. 
 
-Das Q-Q-Diagramm zeigt, dass die Daten recht nahe an der linearen roten Linie liegen. Daher lautet das Ergebnis für diese Teilaufgabe: Die logistische Verzögerung ist normal verteilt. 
 
 
+Ein Q-Q-Plot kann verwendet werden, um die Annahme zu überprüfen, dass die Daten des logistischen Verzugs einer bestimmten theoretischen Verteilung folgen. Der Q-Q-Plot vergleicht die empirischen Quantile der Daten mit den theoretischen Quantilen der angenommenen Verteilung. Wenn die empirischen und theoretischen Quantile eng beieinander liegen, deutet dies darauf hin, dass die empirischen Daten ähnlich wie die angenommene Verteilung verteilt sind.
+
+```{r, fig.align="center", message = FALSE, warning = FALSE}
+
+qqnorm(Verzug_arbeitstage)  
+qqline(Verzug_arbeitstage, col="red")
+
+```
+
+Das Q-Q-Plot zeigt, dass die Daten recht nahe an der linearen roten Linie liegen, jedoch sind einige zum Teil erhebliche Abweichungen zu erkennen.
+
+Deswegen wird nun der Shapiro-Wilk-Test hinzugezogen, dabei wird aus den Daten eine zufällige Stichprobe von 5000 Datenpunkten verwendet:
+
+```{r, fig.align="center", message = FALSE, warning = FALSE}
+
+
+shapiro.test(sample(Verzug_arbeitstage, 5000))  
+
+
+```
+Der Wert W = 0.89834 nahe 1 zeigt zunächst einmal eine gute Übereinstimmung mit der Normalverteilung. Der p-Wert = 2.2e-16 ist hingegen viel kleiner als das Signifikanzniveau 0.05. Die Abweichung ist so gravierend, dass die Normalverteilung eindeutig verworfen wird. Eindeutig ist zu erkennen, dass viele Datenpaare auf der rechten Seite des Maximas liegen, während nach links die Werte durch die 0 begrenzt sind und somit auf eine Schiefheit hinweisen könnten.
+
+Um eine schiefe Verteilung zu testen, eignet sich der Skewness-Test: 
+
+```{r, fig.align="center", message = FALSE, warning = FALSE}
+
+
+skewness_test <- skewness(Verzug_arbeitstage)
+
+skewness_test
+```
+Der Wert 0.5610644 indiziert hierbei eine rechtsschiefe Verteilung. 
+
+Ergebnis: 
+Die Daten liegen unter einer rechtsschiefen Verteilung vor!
 
 
 ## b)
@@ -91,17 +122,17 @@ Der minimale Verzug und der maximaler Verzug werden bestimmt durch:
 
 ```{r,message=FALSE,warning=FALSE}
 
-min(Logistikverzug$Verzug)
+min(Verzug_arbeitstage)
 
 ```
 Der Minimalwert beträgt damit 0 Tage.
 
 ```{r,message=FALSE,warning=FALSE}
 
-max(Logistikverzug$Verzug)
+max(Verzug_arbeitstage)
 
 ```
-Der Maximalwert beträgt damit 11 Tage.
+Der Maximalwert beträgt damit 10 Tage.
 
 
 ## c) 
@@ -110,19 +141,29 @@ Hier wird nun der Mittelwert des Logistiksverzuges bestimmt:
 
 ```{r, message = FALSE, warning = FALSE}
 
-mittelwert <- mean(Verzug)
+mean(Verzug_arbeitstage)
+
 
 ```
-Der Mittelwert des Verzuges liegt bei 3.080437 Tagen.
+Der Mittelwert des Verzuges liegt bei ungefähr 3.08 Tagen.
 
 
 ## d)
 
 ```{r, fig.align="center", message = FALSE, warning = FALSE}
 
-hist(Verzug, breaks=10, main="Histogramm des Logistikverzugs", xlab="Verzug in Tagen", ylab="Anzahl")
-abline(v = mittelwert, col = "blue", lwd = 2)
-legend("topright", legend = paste("Mittelwert =", round(mittelwert, 2)), col = "blue", lwd = 2)
+
+fig <- plot_ly(x = Verzug_arbeitstage, type = "histogram", nbinsx = 30)
+
+fig <- fig %>% 
+  layout(
+    title = "Histogramm des Verzugs",  
+    xaxis = list(title = "Verzug in Tagen"),   
+    yaxis = list(title = "Häufigkeit") 
+  )
+
+fig
+
 
 ```
 
@@ -132,31 +173,23 @@ legend("topright", legend = paste("Mittelwert =", round(mittelwert, 2)), col = "
 
 Frage: Warum ist es sinnvoll, die Ihnen bereitgestellten Daten in separaten Dateien abzulegen und nicht alles in einer riesigen Tabelle abzuspeichern (4 Argumente)? Wie nennt sich das zugrunde liegende Datenbankkonzept? 
 
-Das zugrundeliegende Datenbankkonzept wird als Beziehungsdatenbanksystem bezeichnet.Dieses Konzept hat mehrere Vorteile:
+Das zugrundeliegende Datenbankkonzept wird als relationales Datenbankmodell bezeichnet. Dieses bietet folgende Vorteile:
 
-Geschwindigkeit
+1. Effiziente Datenverwaltung:
 
-- Die Geschwindigkeit einer relationalen Datenbank ist im Vergleich zu anderen Datenbanktypen wesentlich höher. 
+- Durch die Organisation der Daten in mehrere Tabellen können die Daten effizienter verwaltet werden. Jede Tabelle kann sich auf ein bestimmtes Thema konzentrieren, was die Datenbankstruktur übersichtlicher und leichter zu warten macht. 
 
-Sicherheit
+2. Unterstützung für komplexe Abfragen: 
 
-- Bestimmte Tabellen in einer relationalen Datenbank können vertraulich gemacht werden. Da Tabellen mit einem Benutzernamen und einem Passwort geschützt werden können, können nur autorisierte Benutzer auf diese Tabellen zugreifen und daran arbeiten.
+- Komplexe Abfragen über mehrere Tabellen hinweg sind möglich. Dadurch können umfassende Analysen durchführt und Informationen aus verschiedenen Teilen der Datenbank effizient extrahiert werden.
   
-Einfachheit
+3. Bessere Skalierbarkeit:
 
-- Eine relationale Datenbank ist im Vergleich zu anderen Arten von Netzwerkmodellen sehr viel einfacher. Da sie frei von komplexer Strukturierung und Abfrageverarbeitung ist, erfordert sie keine komplexen Abfragen.
+- Das relationale Datenbankmodell bietet eine bessere Skalierbarkeit, da neue Tabellen hinzufügt oder vorhandene Tabellen angepasst werden können, ohne die gesamte Datenbankstruktur zu beeinträchtigen. Dies erleichtert es, mit zunehmendem Datenwachstum umzugehen und die Leistung der Datenbank zu optimieren.
 
-Korrektheit
+4. Verbesserte Datenkonsistenz:
 
-- Alle Daten, die in relationalen Datenbanken gespeichert werden, sind nicht wiederholbar. Das bedeutet, dass sich die Daten nicht duplizieren und daher genau sind.  
-  
-Zugänglichkeit
-
-- Eine relationale Datenbank benötigt keinen speziellen Pfad für den Zugriff auf die Daten. 
-  
-Mehrere Benutzer
-
-- Mehrere Benutzer können gleichzeitig auf eine relationale Datenbank zugreifen. 
+- Es können Beziehungen zwischen den verschiedenen Tabellen hergestellt werden. Dies ermöglicht es, Daten zu verknüpfen und Abhängigkeiten zwischen den verschiedenen Datenobjekten zu modellieren. Das verbessert die Datenkonsistenz.
 
 
 ## Aufgabe 3 
@@ -167,56 +200,62 @@ Zunächst einmal werden die benötigten Dateien eingelesen:
 
 ```{r message=FALSE, warning=FALSE}
 
+k7 <- as_tibble(read.table("DATA/Komponente/Komponente_K7.txt", sep = "\t", stringsAsFactors = FALSE))
+zulassungen <- read_csv2("DATA/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
 komponenten_OEM1_typ11 <- read_csv2("DATA/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv") 
 komponenten_OEM1_typ12 <- read_csv2("DATA/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv") 
 komponenten_OEM2_typ21 <- read_csv2("DATA/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv") 
 komponenten_OEM2_typ22 <- read_csv2("DATA/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv") 
-k7 <- as_tibble(read.table("DATA/Komponente/Komponente_K7.txt", sep = "\t", stringsAsFactors = FALSE))
-zulassungen <- read_csv2("DATA/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
+
 
 ```
 
-Nun werden die nötigen Spalten der Datein ID_Fahrzeug, ID_Karosserie rausgelesen und in ein übersichtlicheres Dataframe übernommmen:
+Nun werden die nötigen Spalten der Dateien jeweiligen Dateien nach ID_Fahrzeug, ID_Karosserie gefiltert und in ein übersichtlicheres Dataframe übernommmen:
 
 ```{r, message = FALSE, warning = FALSE}
 
-komponenten_OEM1_typ11_slim <- komponenten_OEM1_typ11 %>%
-  dplyr::select(ID_Fahrzeug, ID_Karosserie)
-komponenten_OEM1_typ12_slim <- komponenten_OEM1_typ12 %>%
-  dplyr::select(ID_Fahrzeug, ID_Karosserie)
-komponenten_OEM2_typ21_slim <- komponenten_OEM2_typ21 %>%
-  dplyr::select(ID_Fahrzeug, ID_Karosserie)
-komponenten_OEM2_typ22_slim <- komponenten_OEM2_typ22 %>%
-  dplyr::select(ID_Fahrzeug, ID_Karosserie)
-
-k7_slim <- k7 %>%
+k7_neu <- k7 %>%
   dplyr::select(ID_Karosserie)
 
-zulassungen_slim <- zulassungen %>%
+zulassungen_neu <- zulassungen %>%
   dplyr::select(IDNummer, Gemeinden, Zulassung) %>%
   rename(ID_Fahrzeug = IDNummer)
 
+komponenten_OEM1_typ11_neu <- komponenten_OEM1_typ11 %>%
+  dplyr::select(ID_Fahrzeug, ID_Karosserie)
+
+komponenten_OEM1_typ12_neu <- komponenten_OEM1_typ12 %>%
+  dplyr::select(ID_Fahrzeug, ID_Karosserie)
+
+komponenten_OEM2_typ21_neu <- komponenten_OEM2_typ21 %>%
+  dplyr::select(ID_Fahrzeug, ID_Karosserie)
+
+komponenten_OEM2_typ22_neu <- komponenten_OEM2_typ22 %>%
+  dplyr::select(ID_Fahrzeug, ID_Karosserie)
+
+
+
 ```
 
-Jetzt werden alle vorherigen Dataframes zusammengesammmelt in ein Dataframe abgespeichert mit den dazugehörigen Daten:
+Nun werden alle vorherigen Dataframes zusammengesammmelt und in ein Dataframe abgespeichert mit den dazugehörigen Daten:
 
 
 ```{r, message = FALSE, warning = FALSE}
 
-komponenten_total <- rbind(komponenten_OEM1_typ11_slim, komponenten_OEM1_typ12_slim, komponenten_OEM2_typ21_slim, komponenten_OEM2_typ22_slim)
-
-final_data <- left_join(k7_slim, komponenten_total, by = "ID_Karosserie") %>%
-  left_join(zulassungen_slim, by = "ID_Fahrzeug")
+komponenten_total <- rbind(komponenten_OEM1_typ11_neu, komponenten_OEM1_typ12_neu, komponenten_OEM2_typ21_neu, komponenten_OEM2_typ22_neu)
+abschlussdaten <- left_join(k7_neu, komponenten_total, by = "ID_Karosserie") %>%
+  left_join(zulassungen_neu, by = "ID_Fahrzeug")
 
 ```
 
-Abschließend kann nun aus dem Dataframe die Anzahl der Fahrzeuge gefiltert werden:
+Abschließend kann nun aus den Abschlussdaten die Anzahl der Fahrzeuge, die die Komponente enthalten und in Wehr zugelassen wurden, gefiltert werden:
 
 ```{r, message = FALSE, warning = FALSE}
 
-fahrzeuge_k7_wehr <- filter(final_data, Gemeinden == "WEHR") %>%
+fahrzeuge_wehr_k7 <- filter(abschlussdaten, Gemeinden == "WEHR") %>%
   summarise(Amount_Cars_in_Wehr = n())
-fahrzeuge_k7_wehr
+
+fahrzeuge_wehr_k7
 
 ```
 
@@ -226,34 +265,36 @@ Es gibt 6 Fahrzeuge, die die Komponente K7 enthalten und in Wehr zugelassen wurd
 
 Welche Datentypen haben die Attribute der Zulassungstabelle „Zulassungen_aller_Fahrzeuge“? Erstellen Sie dazu eine Tabelle in Markdown.
 
-Zunächst wird die Datei "Zulassungen_alle_Fahrzeuge" importiert:
-```{r, message = FALSE, warning = FALSE}
+Die Datei "Zulassungen_alle_Fahrzeuge" ist bereits in Aufgabe 3 eingelesen worden und kann weiterhin genutzt werden.
 
-zulassungen <- read_csv2("DATA/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
-
-```
-
-Um den Datentyp zu identifizieren, wurde die Funktionsklasse auf jede Spalte mit sapply und lapply angewendet. 
+Um den Datentyp zu identifizieren, kann die Funktion str() genutzt werden: 
 
 ```{r, message = FALSE, warning = FALSE}
 
-
-class(zulassungen$...1) #numeric
-class(zulassungen$IDNummer) #character
-class(zulassungen$Gemeinden) #character
-class(zulassungen$Zulassung) #date
+str(zulassungen)
 
 ```
-Die Tabelle mit allen Spaltennamen und Datentypen ist hier zu sehen:
+Es ist zu erkennen, dass die Zulassungstabelle die 4 Spalten besitzt mit "...1" als numeric double, "IDNumner" als character, "Gemeinde" als character und "Zulassung" als date.
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
 
-alle_spalten_namen_zulassungen <- names(zulassungen)
+Hier ist die dazugehörige Tabelle zu sehen:
 
-data_types_zulassungen <- c(class(zulassungen$...1), class(zulassungen$IDNummer), class(zulassungen$Gemeinden), class(zulassungen$Zulassung))
+```{r, message = FALSE, warning = FALSE}
 
-table <- cbind(alle_spalten_namen_zulassungen, data_types_zulassungen)
-kable(table, caption = "Importiertes Dataframe", col.names = c("Spalte", "Datentypen"))
+spaltennamen_zulassung <- names(zulassungen)
+
+datentypen_zulassungen <- c(class(zulassungen$...1), class(zulassungen$IDNummer), class(zulassungen$Gemeinden), class(zulassungen$Zulassung))
+
+
+tabelle <- data.frame(Spaltenname = spaltennamen_zulassung, Datentyp = datentypen_zulassungen)
+
+kable(
+  tabelle,
+  caption = "Zulassung alles Fahrzeuge",
+  format = "markdown",  
+  booktabs = TRUE       
+)
+
 ```
 
 
@@ -263,43 +304,28 @@ Sie wollen Ihre Applikation veröffentlichen. Warum ist es gerade dann sinnvoll 
 
 Verfügbarkeit:
 
-- Ein Server ist immer verfügbarKunden können immer und von überall auf die Informationen zugreifen
+- Ein Server kann durchgehend online sein. Die Benutzer greifen von verschiedenen Orten auf dieselben Daten zu, was Dateninkonsistenzen vermeidet.
 
-- Ein eigener Computer ist ungeeignet, da nicht jeder auf die zugrunde liegenden Daten zugreifen kann
+Datenorganisation:
 
-
-
-Rechenleistung:
-
-- Ein Server hat in der Regel hardwaremäßig viel mehr Rechenleistung als lokale Computer
-
-- Technische Probleme wie Überkapazitäten können vermieden werden.
+- Die Verwendung einer Server-Datenbank ermöglicht eine strukturierte Organisation und Speicherung von Daten. Dies erleichtert die Verwaltung, Aktualisierung und Pflege der Daten, selbst wenn die Benutzerzahl begrenzt ist.
 
 
 Warum können Sie die Datensätze nicht auf Ihrem persönlichen Computer ablegen? 
 
+Begrenzte Ressourcen:
 
-Menge der Daten:
+- Persönliche Computer haben begrenzte Ressourcen wie CPU, RAM und Festplattenspeicher. Wenn die Datenmengen groß sind oder viele Benutzer auf die Anwendung zugreifen, kann dies zu Leistungsproblemen führen.
 
-- Sowohl die Datenmenge als auch die Datenanalyse erfordern eine große Speicherkapazität. Ein Personalcomputer ist unter Umständen nicht in der Lage, diese zu verarbeiten.
-Verlust von Daten
+Datenverlust:
 
-- Daten können auf einem Personalcomputer verloren gehen.
-
-Sicherheit
-
-- Die Verwendung eines Personalcomputers ist aus Sicherheitsgründen nicht zu empfehlen
-
-- Der Zugriff auf einen Server kann besser kontrolliert werden
-
-- Außerdem erlaubt die Hardware von Servern eine redundante Speicherung, was eine höhere Sicherheit gegen technische Ausfälle bietet.
-
-
+- Persönliche Computer sind anfälliger für Datenverlust durch Hardwarefehler, Softwareprobleme oder Diebstahl. Daten, die ausschließlich auf einem persönlichen Computer gespeichert sind, können leichter verloren gehen.
 
 Nennen Sie eine einfache Möglichkeit Ihre Applikation ihrem Kundenkreis zugänglich zu machen?
 
+- Eine Mölichkeit ist die Bereitstellung über das Internet mittels einer Webanwendung. Benutzer können einfach über ihren Webbrowser auf die Anwendung zugreifen, ohne dass sie zusätzliche Software installieren müssen.
 
-Eine gute Möglichkeit, Ihre Anwendung Ihren Kunden zur Verfügung zu stellen, ist die Bereitstellung über eine Webseite. Die Kunden können die Anwendung über das Internet mit einem Webbrowser nutzen.
+- Eine Alternative wäre die Veröffentlichung der Applikation über einen App Store oder eine ähnliche Plattform für den Download und die Installation auf den Endgeräten der Benutzer.
 
 ## Aufgabe 6 
 
@@ -308,9 +334,7 @@ Am 11.08.2010 hat es einen Unfall mit Fahrerflucht gegeben. Von dem Kennzeichen 
 
 ```{r, message = FALSE, warning = FALSE}
 
-komponenten_mit_zulassungen <- left_join(zulassungen_slim, komponenten_total, by = "ID_Fahrzeug")
-
-
+komponenten_mit_zulassungen <- left_join(zulassungen_neu, komponenten_total, by = "ID_Fahrzeug")
 ort <- filter(komponenten_mit_zulassungen, ID_Karosserie == "K7-114-1142-31")
 
 ort
