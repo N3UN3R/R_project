@@ -34,7 +34,7 @@ if(!require(install.load)){
 }
 
 # Installation und Laden der genannten Pakete, falls erforderlich   
-install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2", "stringr")
 
 print("hello")
 ```
@@ -89,6 +89,7 @@ glimpse(oem_typ12_filtered)
 glimpse(oem_typ21_filtered)
 glimpse(oem_typ22_filtered)
 ```
+#Daten nach den Fehlerhaften Fahrzeugen filtern (fehlerhaft==1)
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
 oem_typ11_fehlerhaft <- oem_typ11_filtered %>%
@@ -124,6 +125,8 @@ oem_typ22_auswahl <- select(oem_typ22_fehlerhaft, ID_Fahrzeug, Fehlerhaft_Datum)
 fahrzeuge_gesamt_filtered <- bind_rows(oem_typ11_auswahl, oem_typ12_auswahl, oem_typ21_auswahl, oem_typ22_auswahl)
 glimpse(fahrzeuge_gesamt_filtered)
 ```
+
+##Filter des Datensatzes nach kaputten Fahrzeugen aus den Jahren 2014 bis 2016
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 # Stellen Sie sicher, dass 'Fehlerhaft_Datum' als Datum interpretiert wird
 fahrzeuge_gesamt_filtered$Fehlerhaft_Datum <- as.Date(fahrzeuge_gesamt_filtered$Fehlerhaft_Datum)
@@ -165,33 +168,50 @@ fz_ges_filtered_years_bestandteile <- inner_join(bestandteile_gesamt, fahrzeuge_
 glimpse(fz_ges_filtered_years_bestandteile)
 ```
 
-## Alle Bestandteile die als fehlerhaft gemeldet sind, in den Fahrzeugen die in unseren Städten zugelassen sind 
+## Alle Bestandteile die als fehlerhaft gemeldet sind, in den Fahrzeugen die in unseren Städten zugelassen sind in den Jahren 2014 -2016
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
+filepath <- "C:\\Users\\hendr\\Documents\\Case_Study_Gruppe_07\\"
 
-glimpse(fz_ges_filtered_years_bestandteile)
-
-Bestandteile_Komponente_K1BE1 <-fread("Komponente/Komponente/Bestandteile_Komponente_K1BE1.csv", header = TRUE, data.table = FALSE)
-glimpse(Bestandteile_Komponente_K1BE1)
-
-#K1BE1_filtered <- inner_join(Bestandteile_Komponente_K1BE1, fz_ges_filtered_years_bestandteile, by = "ID_Karosserie")
-
-ergebnis_df <- inner_join(fz_ges_filtered_years_bestandteile, Bestandteile_Komponente_K1BE1, by = c("ID_Motor" = "ID_K1BE1"))
-
-
-glimpse(ergebnis_df)
-```
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T01.txt")
-txt <- gsub(" | | ",",",txt, fixed = TRUE)
-txt <- gsub(" ","\n",txt, fixed = TRUE)
+txt <- gsub(" | | ",",", txt, fixed = TRUE)
+txt <- gsub(" ", "\n", txt, fixed = TRUE)
 part_T01 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
-  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+    filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
-
 glimpse(part_T01)
+
+# Liste der Spalten ohne Suffix erstellen
+base_columns <- c("ID_T01", "Produktionsdatum", "Herstellernummer", 
+                  "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum", 
+                  "Fehlerhaft_Fahrleistung")
+
+# Leeres Datenframe erstellen, um kombinierte Daten zu speichern
+combined_data <- data.frame(matrix(ncol = length(base_columns), nrow = nrow(part_T01)))
+colnames(combined_data) <- base_columns
+
+# Schleife über jede Basis-Spalte
+for (base_col in base_columns) {
+  # Werte aus Spalten mit Suffixen extrahieren
+  col_x <- paste0(base_col, ".x")
+  col_y <- paste0(base_col, ".y")
+  
+  # Zusammenführen der Werte aus allen drei Spalten und Entfernen von NA-Werten
+  combined_data[[base_col]] <- ifelse(!is.na(part_T01[[col_x]]), part_T01[[col_x]], 
+                                      ifelse(!is.na(part_T01[[col_y]]), part_T01[[col_y]], part_T01[[base_col]]))
+}
+
+# Entfernen von Zeilen mit allen NA-Werten
+combined_data <- combined_data[rowSums(is.na(combined_data)) != ncol(combined_data), ]
+
+glimpse(combined_data)
+
+
 ```
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T02.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -202,7 +222,38 @@ part_T02 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
 glimpse(part_T02)
+df <- part_T02
+
+# Daten für ".x" und ".y" auswählen
+df_x <- select(df, ends_with(".x"))
+df_y <- select(df, ends_with(".y"))
+
+# Prüfen, welche Spalten komplett NA sind und behalte die komplementären Spalten
+na_columns_x <- sapply(df_x, function(x) all(is.na(x)))
+na_columns_y <- sapply(df_y, function(y) all(is.na(y)))
+
+relevant_x <- df_x[, !na_columns_x]
+relevant_y <- df_y[, !na_columns_y]
+
+# Entferne das Suffix ".x" oder ".y" und kombiniere die Daten
+names(relevant_x) <- gsub("\\.x$", "", names(relevant_x))
+names(relevant_y) <- gsub("\\.y$", "", names(relevant_y))
+
+combined_data <- bind_rows(relevant_x, relevant_y)
+
+# Entferne NA-Einträge
+combined_data <- na.omit(combined_data)
+glimpse(combined_data)
+
+# Überprüfe, ob es NA-Werte im DataFrame gibt
+any_na <- anyNA(combined_data)
+
+
 ```
+
+
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T03.txt")
 txt <- gsub("|",",",txt, fixed = TRUE)
@@ -219,13 +270,48 @@ part_T04 <- fread("Einzelteil/Einzelteil/Einzelteil_T04.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T04)
 ```
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-part_T05 <- fread("Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE) %>% 
- filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+part_T05 <- fread("Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE) %>%
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+
 glimpse(part_T05)
+
+df <- part_T05
+
+# Daten für ".x" und ".y" auswählen
+df_x <- select(df, ends_with(".x"))
+df_y <- select(df, ends_with(".y"))
+
+# Prüfen, welche Spalten komplett NA sind und behalte die komplementären Spalten
+na_columns_x <- sapply(df_x, function(x) all(is.na(x)))
+na_columns_y <- sapply(df_y, function(y) all(is.na(y)))
+
+relevant_x <- df_x[, !na_columns_x]
+relevant_y <- df_y[, !na_columns_y]
+
+# Entferne das Suffix ".x" oder ".y" und kombiniere die Daten
+names(relevant_x) <- gsub("\\.x$", "", names(relevant_x))
+names(relevant_y) <- gsub("\\.y$", "", names(relevant_y))
+
+combined_data <- bind_rows(relevant_x, relevant_y)
+
+# Entferne NA-Einträge
+combined_data <- na.omit(combined_data)
+glimpse(combined_data)
+
+# Überprüfe, ob es NA-Werte im DataFrame gibt
+any_na <- anyNA(combined_data)
+
+
 ```
+
+
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T06 <- fread("Einzelteil/Einzelteil/Einzelteil_T06.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -233,11 +319,14 @@ part_T06 <- fread("Einzelteil/Einzelteil/Einzelteil_T06.csv", header = TRUE, dat
 glimpse(part_T06)
 ```
 
-
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T07.txt")
-txt <- gsub(" ", "", txt, fixed = TRUE)
-txt <- gsub("\v", "\n", txt, fixed = TRUE)
+txt <- gsub("\"\t\"",",",txt)
+txt <- gsub("\"\t",",",txt)
+txt <- gsub("\t\"",",",txt)
+txt <- gsub("\t",",",txt)
+txt <- gsub("\"\"","\n",txt)
+txt <- gsub("\"","\n",txt)
 part_T07 <- fread(text = txt, sep = ",", quote = "", data.table = FALSE) %>% 
   filter((Fehlerhaft == 1) &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016))) 
@@ -245,59 +334,35 @@ part_T07 <- fread(text = txt, sep = ",", quote = "", data.table = FALSE) %>%
 glimpse(part_T07)
 ```
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-library(data.table)
-
-# Daten einlesen und das richtige Trennzeichen angeben (hier wird ein Tabulator angenommen)
-part_T07 <- fread("Einzelteil/Einzelteil/Einzelteil_T07.txt", sep = "\t", quote = "", header = FALSE, data.table = FALSE)
-
-# Filtern und Daten anzeigen
-part_T07 <- part_T07 %>% 
-  filter((Fehlerhaft == 1) &
-         (year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)) 
-
-# Ausgabe der Struktur der gefilterten Daten
-glimpse(part_T07)
-
-
-```
-
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-# Datei einlesen
-part_T07 <- read.table("Einzelteil/Einzelteil/Einzelteil_T07.txt", sep = "\t", header = TRUE, quote = "\"", stringsAsFactors = FALSE)
-
-# Daten anzeigen
-glimpse(part_T07)
-```
-
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T08 <- fread("Einzelteil/Einzelteil/Einzelteil_T08.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T08)
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T09.txt")
-txt <- gsub('\\\\', ',', txt, fixed = TRUE)
-txt <- gsub("\f", "\n", txt, fixed = TRUE)
-part_T09 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+part_T09 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T09.txt")) %>%
+  str_replace_all('\\\"', '') %>%
+  str_replace_all('\\\\', ',') %>%
+  str_replace_all('\v','\n')
+
+part_T09 <- fread(part_T09, sep =",", drop = c(1,2)) %>%
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))  %>%
+mutate(ID_T09 = coalesce(ID_T09.x, ID_T09.y),
+         Produktionsdatum = coalesce(Produktionsdatum.x, Produktionsdatum.y),
+         Herstellernummer = coalesce(Herstellernummer.x, Herstellernummer.y),
+         Werksnummer = coalesce(Werksnummer.x, Werksnummer.y),
+         Fehlerhaft = coalesce(Fehlerhaft.x, Fehlerhaft.y),
+         Fehlerhaft_Datum = coalesce(Fehlerhaft_Datum.x, Fehlerhaft_Datum.y),
+         Fehlerhaft_Fahrleistung = coalesce(Fehlerhaft_Fahrleistung.x, Fehlerhaft_Fahrleistung.y)) %>%
+  select(-ends_with(".x"), -ends_with(".y")) %>%
+  drop_na()
 
 glimpse(part_T09)
+
 ```
-
-data_txt <- read.table("C:/R-Dateien/data.txt", sep="\t", header=TRUE, dec=","
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- read.table("Einzelteil/Einzelteil/Einzelteil_T09.txt")
-part_T09 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
- filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
-         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
-
-glimpse(part_T09)
-```
-
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T10 <- fread("Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
@@ -311,17 +376,46 @@ txt <- gsub("\t", ",", txt, fixed = TRUE)
 txt <- gsub("\f", "\n", txt, fixed = TRUE)
 part_T11 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 & 
-         year(as.Date(Fehlerhaft_Datum)) >= 2014 & 
-         year(as.Date(Fehlerhaft_Datum)) <= 2016) 
+         year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) 
 
 glimpse(part_T11)
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T12 <- fread("Einzelteil/Einzelteil/Einzelteil_T12.csv", header = TRUE, data.table = FALSE) %>% 
-  filter(Fehlerhaft == 1 &
-         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+    filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
 glimpse(part_T12)
+# Liste der Spalten ohne Suffix erstellen
+base_columns <- c("ID_T12", "Produktionsdatum", "Herstellernummer", 
+                  "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum", 
+                  "Fehlerhaft_Fahrleistung")
+
+# Leeres Datenframe erstellen, um kombinierte Daten zu speichern
+combined_data <- data.frame(matrix(ncol = length(base_columns), nrow = nrow(part_T12)))
+colnames(combined_data) <- base_columns
+
+# Schleife über jede Basis-Spalte
+for (base_col in base_columns) {
+  # Werte aus Spalten mit Suffixen extrahieren
+  col_x <- paste0(base_col, ".x")
+  col_y <- paste0(base_col, ".y")
+  
+  # Zusammenführen der Werte aus allen drei Spalten und Entfernen von NA-Werten
+  combined_data[[base_col]] <- ifelse(!is.na(part_T12[[col_x]]), part_T12[[col_x]], 
+                                      ifelse(!is.na(part_T12[[col_y]]), part_T12[[col_y]], part_T12[[base_col]]))
+}
+
+# Entfernen von Zeilen mit allen NA-Werten
+combined_data <- combined_data[rowSums(is.na(combined_data)) != ncol(combined_data), ]
+
+glimpse(combined_data)
+
 ```
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T13 <- fread("Einzelteil/Einzelteil/Einzelteil_T13.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -338,31 +432,85 @@ glimpse(part_T14)
 part_T15 <- fread("Einzelteil/Einzelteil/Einzelteil_T15.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+glimpse(part_T15)
+part_T15 <- fread("Einzelteil/Einzelteil/Einzelteil_T15.csv", header = TRUE, data.table = FALSE) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) %>%
+mutate(ID_T15 = coalesce(ID_T15.x, ID_T15.y),
+         Produktionsdatum = coalesce(Produktionsdatum.x, Produktionsdatum.y),
+         Herstellernummer = coalesce(Herstellernummer.x, Herstellernummer.y),
+         Werksnummer = coalesce(Werksnummer.x, Werksnummer.y),
+         Fehlerhaft = coalesce(Fehlerhaft.x, Fehlerhaft.y),
+         Fehlerhaft_Datum = coalesce(Fehlerhaft_Datum.x, Fehlerhaft_Datum.y),
+         Fehlerhaft_Fahrleistung = coalesce(Fehlerhaft_Fahrleistung.x, Fehlerhaft_Fahrleistung.y)) %>%
+  select(-ends_with(".x"), -ends_with(".y")) %>%
+  drop_na()
+
 glimpse(part_T15)
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T16.txt")
-txt <- gsub(" | | ",",",txt, fixed = TRUE)
-txt <- gsub(" ","\n",txt, fixed = TRUE)
-part_T16 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
-  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
-         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+part_T16 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T16.txt")) %>%
+  str_replace_all(" \\| \\| ", ",") %>%
+  str_replace_all("\t","\n")
+part_T16 <- fread(part_T16, sep =",", drop = c(1,2))
+
+
+part_T16 <- part_T16 %>%
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) %>%
+  mutate(ID_T16 = coalesce(ID_T16.x, ID_T16.y),
+         Produktionsdatum = coalesce(Produktionsdatum.x, Produktionsdatum.y),
+         Herstellernummer = coalesce(Herstellernummer.x, Herstellernummer.y),
+         Werksnummer = coalesce(Werksnummer.x, Werksnummer.y),
+         Fehlerhaft = coalesce(Fehlerhaft.x, Fehlerhaft.y),
+         Fehlerhaft_Datum = coalesce(Fehlerhaft_Datum.x, Fehlerhaft_Datum.y),
+         Fehlerhaft_Fahrleistung = coalesce(Fehlerhaft_Fahrleistung.x, Fehlerhaft_Fahrleistung.y)) %>%
+  select(-ends_with(".x"), -ends_with(".y")) %>%
+  drop_na()
 
 glimpse(part_T16)
 ```
+
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T17 <- fread("Einzelteil/Einzelteil/Einzelteil_T17.csv", header = TRUE, data.table = FALSE) %>% 
   filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
-
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
 glimpse(part_T17)
+
+# Liste der Spalten ohne Suffix erstellen
+base_columns <- c("ID_T17", "Produktionsdatum", "Herstellernummer", 
+                  "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum", 
+                  "Fehlerhaft_Fahrleistung")
+
+# Leeres Datenframe erstellen, um kombinierte Daten zu speichern
+combined_data <- data.frame(matrix(ncol = length(base_columns), nrow = nrow(part_T17)))
+colnames(combined_data) <- base_columns
+
+# Schleife über jede Basis-Spalte
+for (base_col in base_columns) {
+  # Werte aus Spalten mit Suffixen extrahieren
+  col_x <- paste0(base_col, ".x")
+  col_y <- paste0(base_col, ".y")
+  
+  # Zusammenführen der Werte aus allen drei Spalten und Entfernen von NA-Werten
+  combined_data[[base_col]] <- ifelse(!is.na(part_T17[[col_x]]), part_T17[[col_x]], 
+                                      ifelse(!is.na(part_T17[[col_y]]), part_T17[[col_y]], part_T17[[base_col]]))
+}
+
+# Entfernen von Zeilen mit allen NA-Werten
+combined_data <- combined_data[rowSums(is.na(combined_data)) != ncol(combined_data), ]
+
+glimpse(combined_data)
+
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T18 <- fread("Einzelteil/Einzelteil/Einzelteil_T18.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -376,41 +524,103 @@ part_T19 <- fread("Einzelteil/Einzelteil/Einzelteil_T19.csv", header = TRUE, dat
 glimpse(part_T19)
 ```
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T20.txt")
+txt <- readLines(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T20.txt"))
 txt <- gsub(" | | ",",",txt, fixed = TRUE)
 txt <- gsub(" ","\n",txt, fixed = TRUE)
-part_T20 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+part_T20 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2,10)) %>% 
     filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T20)
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-part_T21 <- fread("Einzelteil/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE) %>% 
+part_T21 <- fread("Einzelteil/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE,drop = c(1,2,10)) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T21)
 ```
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T22.txt")
-txt <- gsub("\"\t\"",",",txt)
-txt <- gsub("\"\t",",",txt)
-txt <- gsub("\t\"",",",txt)
-txt <- gsub("\t",",",txt)
-txt <- gsub("\"\"","\n",txt)
-txt <- gsub("\"","\n",txt)
-part_T22 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
- filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
-         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T22.txt")
+txt <- gsub("\"\t\"", ",", txt)
+txt <- gsub("\"\t", ",", txt)
+txt <- gsub("\t\"", ",", txt)
+txt <- gsub("\t", ",", txt)
+txt <- gsub("\"\"", "\n", txt)
+txt <- gsub("\"", "\n", txt)
+
+part_T22 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1, 2, 10)) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1) &
+           ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+            (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+            (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
 glimpse(part_T22)
+
+
+# Liste der Spalten ohne Suffix erstellen
+base_columns <- c("ID_T22", "Produktionsdatum", "Herstellernummer", 
+                  "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum", 
+                  "Fehlerhaft_Fahrleistung")
+
+# Leeres Datenframe erstellen, um kombinierte Daten zu speichern
+combined_data <- data.frame(matrix(ncol = length(base_columns), nrow = nrow(part_T22)))
+colnames(combined_data) <- base_columns
+
+# Schleife über jede Basis-Spalte
+for (base_col in base_columns) {
+  # Werte aus Spalten mit Suffixen extrahieren
+  col_x <- paste0(base_col, ".x")
+  col_y <- paste0(base_col, ".y")
+  
+  # Zusammenführen der Werte aus allen drei Spalten und Entfernen von NA-Werten
+  combined_data[[base_col]] <- ifelse(!is.na(part_T22[[col_x]]), part_T22[[col_x]], 
+                                      ifelse(!is.na(part_T22[[col_y]]), part_T22[[col_y]], part_T22[[base_col]]))
+}
+
+# Entfernen von Zeilen mit allen NA-Werten
+combined_data <- combined_data[rowSums(is.na(combined_data)) != ncol(combined_data), ]
+
+glimpse(combined_data)
+
 ```
+
+
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T23 <- fread("Einzelteil/Einzelteil/Einzelteil_T23.csv", header = TRUE, data.table = FALSE) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T23)
+df <- part_T23
+
+# Daten für ".x" und ".y" auswählen
+df_x <- select(df, ends_with(".x"))
+df_y <- select(df, ends_with(".y"))
+
+# Prüfen, welche Spalten komplett NA sind und behalte die komplementären Spalten
+na_columns_x <- sapply(df_x, function(x) all(is.na(x)))
+na_columns_y <- sapply(df_y, function(y) all(is.na(y)))
+
+relevant_x <- df_x[, !na_columns_x]
+relevant_y <- df_y[, !na_columns_y]
+
+# Entferne das Suffix ".x" oder ".y" und kombiniere die Daten
+names(relevant_x) <- gsub("\\.x$", "", names(relevant_x))
+names(relevant_y) <- gsub("\\.y$", "", names(relevant_y))
+
+combined_data <- bind_rows(relevant_x, relevant_y)
+
+# Entferne NA-Einträge
+combined_data <- na.omit(combined_data)
+glimpse(combined_data)
+
+# Überprüfe, ob es NA-Werte im DataFrame gibt
+any_na <- anyNA(combined_data)
+
+
 ```
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T24.txt")
@@ -422,7 +632,32 @@ part_T24 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
 glimpse(part_T24)
+df <- part_T24
+
+# Daten für ".x" und ".y" auswählen
+df_x <- select(df, ends_with(".x"))
+df_y <- select(df, ends_with(".y"))
+
+# Prüfen, welche Spalten komplett NA sind und behalte die komplementären Spalten
+na_columns_x <- sapply(df_x, function(x) all(is.na(x)))
+na_columns_y <- sapply(df_y, function(y) all(is.na(y)))
+
+relevant_x <- df_x[, !na_columns_x]
+relevant_y <- df_y[, !na_columns_y]
+
+# Entferne das Suffix ".x" oder ".y" und kombiniere die Daten
+names(relevant_x) <- gsub("\\.x$", "", names(relevant_x))
+names(relevant_y) <- gsub("\\.y$", "", names(relevant_y))
+
+combined_data <- bind_rows(relevant_x, relevant_y)
+
+# Entferne NA-Einträge
+combined_data <- na.omit(combined_data)
+glimpse(combined_data)
+
+
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T25 <- fread("Einzelteil/Einzelteil/Einzelteil_T25.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -435,16 +670,20 @@ part_T26 <- fread("Einzelteil/Einzelteil/Einzelteil_T26.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 glimpse(part_T26)
 ```
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T27.txt")
-txt <- gsub(" | | ",",",txt, fixed = TRUE)
-txt <- gsub(" ","\n",txt, fixed = TRUE)
-part_T27 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+part_T27 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T27.txt")) %>%
+  str_replace_all(" \\| \\| ", ",") %>%
+  str_replace_all("\a", "\n") 
+part_T27 <- fread(part_T27, sep =",", drop = c(1,2))%>%
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 
 glimpse(part_T27)
 ```
+
+
+
 
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -455,12 +694,37 @@ part_T30 <- fread("Einzelteil/Einzelteil/Einzelteil_T30.csv", header = TRUE, dat
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
 glimpse(part_T30)
+# Liste der Spalten ohne Suffix erstellen
+base_columns <- c("ID_T30", "Produktionsdatum", "Herstellernummer", 
+                  "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum", 
+                  "Fehlerhaft_Fahrleistung")
+
+# Leeres Datenframe erstellen, um kombinierte Daten zu speichern
+combined_data <- data.frame(matrix(ncol = length(base_columns), nrow = nrow(part_T30)))
+colnames(combined_data) <- base_columns
+
+# Schleife über jede Basis-Spalte
+for (base_col in base_columns) {
+  # Werte aus Spalten mit Suffixen extrahieren
+  col_x <- paste0(base_col, ".x")
+  col_y <- paste0(base_col, ".y")
+  
+  # Zusammenführen der Werte aus allen drei Spalten und Entfernen von NA-Werten
+  combined_data[[base_col]] <- ifelse(!is.na(part_T30[[col_x]]), part_T30[[col_x]], 
+                                      ifelse(!is.na(part_T30[[col_y]]), part_T30[[col_y]], part_T30[[base_col]]))
+}
+
+# Entfernen von Zeilen mit allen NA-Werten
+combined_data <- combined_data[rowSums(is.na(combined_data)) != ncol(combined_data), ]
+
+glimpse(combined_data)
+
 ```
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T31.txt")
+txt <- readLines(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T31.txt"))
 txt <- gsub("  ",",",txt, fixed = TRUE)
 txt <- gsub("\b","\n",txt, fixed = TRUE)
-part_T31 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+part_T31 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2)) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 
@@ -472,6 +736,29 @@ part_T32 <- fread("Einzelteil/Einzelteil/Einzelteil_T32.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T32)
+df <- part_T32
+
+# Daten für ".x" und ".y" auswählen
+df_x <- select(df, ends_with(".x"))
+df_y <- select(df, ends_with(".y"))
+
+# Prüfen, welche Spalten komplett NA sind und behalte die komplementären Spalten
+na_columns_x <- sapply(df_x, function(x) all(is.na(x)))
+na_columns_y <- sapply(df_y, function(y) all(is.na(y)))
+
+relevant_x <- df_x[, !na_columns_x]
+relevant_y <- df_y[, !na_columns_y]
+
+# Entferne das Suffix ".x" oder ".y" und kombiniere die Daten
+names(relevant_x) <- gsub("\\.x$", "", names(relevant_x))
+names(relevant_y) <- gsub("\\.y$", "", names(relevant_y))
+
+combined_data <- bind_rows(relevant_x, relevant_y)
+
+# Entferne NA-Einträge
+combined_data <- na.omit(combined_data)
+glimpse(combined_data)
+
 ```
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T33 <- fread("Einzelteil/Einzelteil/Einzelteil_T33.csv", header = TRUE, data.table = FALSE) %>% 
@@ -480,10 +767,11 @@ part_T33 <- fread("Einzelteil/Einzelteil/Einzelteil_T33.csv", header = TRUE, dat
 glimpse(part_T33)
 ```
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T34.txt")
-txt <- gsub(" | | ",",",txt, fixed = TRUE)
-txt <- gsub(" ","\n",txt, fixed = TRUE)
-part_T34 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+part_T34 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T34.txt")) %>%
+  str_replace_all(" \\| \\| ", ",") %>%
+  str_replace_all("\"\"", "\"\n\"")
+  
+part_T34 <- fread(part_T34, sep = ",", data.table = FALSE, drop = c(1,2)) %>% 
   filter(Fehlerhaft == 1 &
          ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
 
@@ -491,17 +779,39 @@ glimpse(part_T34)
 ```
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T35.txt")
-txt <- gsub("\"", "", txt, fixed = TRUE)  # Entfernen Sie doppelte Anführungszeichen
-txt <- gsub("\\\\", ",", txt, fixed = TRUE)  # Ersetzen Sie "\\"" durch Kommas
-txt <- gsub("\v", "\n", txt, fixed = TRUE)  # Ersetzen Sie vertikale Tabulatoren durch Zeilenumbrüche
-part_T35 <- fread(text = txt, sep = ",", data.table = FALSE)
+part_T35 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T35.txt")) %>%
+  str_replace_all("\\\\", ", ") %>%
+  str_replace_all("(?<=\\S)(\"\\d+\")", "\n")
+
+part_T35 <- fread(part_T35, sep = ",", drop = c(1,2))%>%
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+glimpse(part_T35)
+
+part_T35 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T35.txt")) %>%
+  str_replace_all("\\\\", ", ") %>%
+  str_replace_all("(?<=\\S)(\"\\d+\")", "\n")
+
+part_T35 <- fread(part_T35, sep = ",", drop = c(1,2))%>%
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) %>%
+  mutate(ID_T35 = coalesce(ID_T35.x, ID_T35.y),
+         Produktionsdatum = coalesce(Produktionsdatum.x, Produktionsdatum.y),
+         Herstellernummer = coalesce(Herstellernummer.x, Herstellernummer.y),
+         Werksnummer = coalesce(Werksnummer.x, Werksnummer.y),
+         Fehlerhaft = coalesce(Fehlerhaft.x, Fehlerhaft.y),
+         Fehlerhaft_Datum = coalesce(Fehlerhaft_Datum.x, Fehlerhaft_Datum.y),
+         Fehlerhaft_Fahrleistung = coalesce(Fehlerhaft_Fahrleistung.x, Fehlerhaft_Fahrleistung.y)) %>%
+  select(-ends_with(".x"), -ends_with(".y")) %>%
+  drop_na()
 
 glimpse(part_T35)
 ```
+
+
+
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T36.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -526,15 +836,51 @@ part_T38 <- fread("Einzelteil/Einzelteil/Einzelteil_T38.csv", header = TRUE, dat
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 glimpse(part_T38)
+df <- part_T38
+
+# Daten für ".x" und ".y" auswählen
+df_x <- select(df, ends_with(".x"))
+df_y <- select(df, ends_with(".y"))
+
+# Prüfen, welche Spalten komplett NA sind und behalte die komplementären Spalten
+na_columns_x <- sapply(df_x, function(x) all(is.na(x)))
+na_columns_y <- sapply(df_y, function(y) all(is.na(y)))
+
+relevant_x <- df_x[, !na_columns_x]
+relevant_y <- df_y[, !na_columns_y]
+
+# Entferne das Suffix ".x" oder ".y" und kombiniere die Daten
+names(relevant_x) <- gsub("\\.x$", "", names(relevant_x))
+names(relevant_y) <- gsub("\\.y$", "", names(relevant_y))
+
+combined_data <- bind_rows(relevant_x, relevant_y)
+
+# Entferne NA-Einträge
+combined_data <- na.omit(combined_data)
+glimpse(combined_data)
+
 ```
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T39.txt")
-txt <- gsub("\\\\", ",", txt, fixed = TRUE)
-txt <- gsub("\v", "\n", txt, fixed = TRUE)
-part_T39 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+
+
+```{r message=FALSE, warning=FALSE, cache=FALSE}
+
+part_T39 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T39.txt")) %>%
+  str_replace_all("\\\\", ",") %>%
+  str_replace_all("\a", "\n") 
+
+part_T39 <- fread(part_T39, sep = ",", drop = c(1,2)) %>%
   filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
          ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
-          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))%>%
+  mutate(ID_T39 = coalesce(ID_T39.x, ID_T39.y),
+         Produktionsdatum = coalesce(Produktionsdatum.x, Produktionsdatum.y),
+         Herstellernummer = coalesce(Herstellernummer.x, Herstellernummer.y),
+         Werksnummer = coalesce(Werksnummer.x, Werksnummer.y),
+         Fehlerhaft = coalesce(Fehlerhaft.x, Fehlerhaft.y),
+         Fehlerhaft_Datum = coalesce(Fehlerhaft_Datum.x, Fehlerhaft_Datum.y),
+         Fehlerhaft_Fahrleistung = coalesce(Fehlerhaft_Fahrleistung.x, Fehlerhaft_Fahrleistung.y)) %>%
+  select(-ends_with(".x"), -ends_with(".y")) %>%
+  drop_na()
 
 glimpse(part_T39)
 ```
