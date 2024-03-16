@@ -43,12 +43,15 @@ ui <- fluidPage(
   titlePanel("Ausfallanalyse und Prognose"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("selectedPart", "Teil auswählen", choices = unique(df$ID_T01)),
-      selectInput("selectedLocation", "Ort auswählen", choices = NULL), # Wird serverseitig gefüllt
+      #selectInput("selectedPart", "Teil auswählen", choices = unique(df$ID_T01)),
+      radioButtons("auswahlModusGemeinden", "Anzeigemodus:",
+                   choices = list("Alle Gemeinden anzeigen" = "alle", "Eine Gemeinde auswählen" = "einzel")),
+      uiOutput("ortAuswahlUI"),
+      #selectInput("selectedLocation", "Ort auswählen", choices = NULL), # Wird serverseitig gefüllt
       #selectInput("selectedMonth", "Monat auswählen", choices = NULL),
-      actionButton("update", "Daten aktualisieren"),
+      #actionButton("update", "Daten aktualisieren"),
       # Dropdown-Menü für die Auswahl zwischen allen Monaten oder einem spezifischen Monat
-      radioButtons("auswahlModus", "Anzeigemodus:",
+      radioButtons("auswahlModusMonat", "Anzeigemodus:",
                    choices = list("Alle Monate anzeigen" = "alle", "Einen Monat auswählen" = "einzel")),
       # Dropdown-Menü für die Monatsauswahl, das dynamisch basierend auf den vorhandenen Daten gefüllt wird
       uiOutput("monatAuswahlUI")
@@ -103,25 +106,37 @@ server <- function(input, output, session) {
              MonatJahr = as.Date(paste0(MonatJahr, "-01"))) # Setze einen Dummy-Tag
   })
   
-  # Balkendiagramm
+
+  
+  # UI die die möglichen Städte anzeigt
+  output$ortAuswahlUI <- renderUI({
+    if (input$auswahlModus == "einzel") {
+      choices <- unique(df$Gemeinden)
+      selectInput("ortAuswahl", "Wähle eine Gemeinde:",
+                  choices = choices)
+    }
+  })
+  
+  # UI die die möglichen Monate anzeigt
   output$monatAuswahlUI <- renderUI({
     if (input$auswahlModus == "einzel") {
+      choices <- unique(format(filteredData()$MonatJahr, "%Y-%m"))
       selectInput("monatAuswahl", "Wähle einen Monat:",
-                  choices = unique(gesammelte_daten$MonatJahr))
+                  choices = choices)
     }
   })
   
   # Erstelle das Balkendiagramm basierend auf der Auswahl
-  output$balkendiagramm <- renderPlot({
-    daten_gefiltert <- gesammelte_daten
+  output$stackedBarPlot <- renderPlot({
+    daten <- filteredData()
     
     # Filtere die Daten, wenn ein spezifischer Monat ausgewählt wurde
     if (input$auswahlModus == "einzel" && !is.null(input$monatAuswahl)) {
-      daten_gefiltert <- gesammelte_daten %>%
-        filter(MonatJahr == as.Date(input$monatAuswahl))
+      selectedMonth <- as.Date(paste0(input$monatAuswahl, "-01"))
+      daten <- daten %>% filter(MonatJahr == selectedMonth)
     }
     
-    ggplot(daten_gefiltert, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
+    ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_fill_viridis_d() +
       labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil",
@@ -129,24 +144,3 @@ server <- function(input, output, session) {
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
-  
-  
-  # Ausfallverlauf
-  output$trendPlot <- renderPlot({
-    # Hier muss der Ausfallverlauf basierend auf `filteredData()` gezeichnet werden
-  })
-  
-  # Karte
-  output$map <- renderLeaflet({
-    leaflet(data = zulassungen) %>%
-      addTiles() %>%
-      addMarkers(~lon, ~lat, popup = ~Gemeinden) # Annahme: lon und lat Spalten müssen vorhanden sein oder erstellt werden
-  })
-  
-  # Datentabelle
-  output$dataTable <- renderDT({
-    datatable(filteredData())
-  })
-}
-
-shinyApp(ui=ui, server=server)
