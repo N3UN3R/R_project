@@ -1,0 +1,93 @@
+---
+  title: "Case Study Group 7"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis XXX, Hendrik Dybus"
+date: "07.02.2024"
+output: 
+  html_document:
+  toc: true
+toc_float: true
+code_folding: hide
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Bibliothek
+Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich.
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#Installation und Laden des Pakets "install.load", falls erforderlich. 
+# Hinweis: Das "install.load"-Paket enthält die Funktion install_load.
+
+if(!require(install.load)){
+  install.packages("install.load")
+  library(install.load)
+}
+
+# Installation und Laden der genannten Pakete, falls erforderlich   
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+
+print("hallo")
+```
+
+#dataframe einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#print("starts")
+#write.csv(result_df_final, "sindy_data.csv", row.names = FALSE)
+
+#df_eingelesen <- read.csv("final_df_T02.csv")
+
+df_eingelesen <- read.csv("final_df_40.csv")
+
+
+
+glimpse(df_eingelesen)
+
+
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+zulassungen_filtered <- fread("C:/Users/lueko/Data Science/Data/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )# %>% 
+#  filter(tolower(Gemeinden) %in% tolower(c("Koeln", "Dortmund", "Bielefeld", "Bonn", "Oberhausen", "Bochum", "Muenster", "Aachen")))
+  #tolower ermöglicht, dass die string sowohl ins capslock, als auch klein oder mischung gefiltert werden
+zulassungen_filtered <- zulassungen_filtered %>%
+  rename(ID_Fahrzeug = IDNummer)
+
+glimpse(zulassungen_filtered)
+```
+
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+result <- merge(df_eingelesen, zulassungen_filtered[, c("ID_Fahrzeug", "Gemeinden")], by = "ID_Fahrzeug", all.x = TRUE)
+
+glimpse(result)
+
+
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+geodaten <- fread("Data/Geodaten/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
+geodaten <- geodaten %>%
+  rename(Gemeinden = Gemeinde)
+glimpse(geodaten)
+
+
+einzigartige_werte <- unique(geodaten$Gemeinden)
+
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+result_final <- merge(result, geodaten[, c("Gemeinden", "Laengengrad","Breitengrad")], by = "Gemeinden", all.x = TRUE)
+
+glimpse(result_final)
+
+
+write.csv(result_final, "final_df_T40_geodaten.csv", row.names = TRUE)
+
+
+```
