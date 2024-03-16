@@ -15,8 +15,8 @@ library(readr)
 library(ggmap)
 
 # Daten laden
-daten <- read_csv("sindy_data.csv")
-zulassungen <- read_csv("ZulassungenGefiltert.csv") # Annahme: Pfad angepasst
+df <- read_csv("final_vorläufig.csv")
+#zulassungen <- read_csv("ZulassungenGefiltert.csv") # Annahme: Pfad angepasst
 
 ui <- fluidPage(
   theme = shinytheme("flatly"), # Verwendung eines vordefinierten Themes; anpassbar
@@ -43,9 +43,15 @@ ui <- fluidPage(
   titlePanel("Ausfallanalyse und Prognose"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("selectedPart", "Teil auswählen", choices = unique(sindy_data$ID_T01)),
+      selectInput("selectedPart", "Teil auswählen", choices = unique(df$ID_T01)),
       selectInput("selectedLocation", "Ort auswählen", choices = NULL), # Wird serverseitig gefüllt
-      actionButton("update", "Daten aktualisieren")
+      #selectInput("selectedMonth", "Monat auswählen", choices = NULL),
+      actionButton("update", "Daten aktualisieren"),
+      # Dropdown-Menü für die Auswahl zwischen allen Monaten oder einem spezifischen Monat
+      radioButtons("auswahlModus", "Anzeigemodus:",
+                   choices = list("Alle Monate anzeigen" = "alle", "Einen Monat auswählen" = "einzel")),
+      # Dropdown-Menü für die Monatsauswahl, das dynamisch basierend auf den vorhandenen Daten gefüllt wird
+      uiOutput("monatAuswahlUI")
     ),
     mainPanel(
       tabsetPanel(
@@ -61,32 +67,69 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   # Reaktive Ausdrücke für gefilterte Daten
   filteredData <- reactive({
-    sindy_data %>% 
-      filter(ID_T01 == input$selectedPart & Gemeinden == input$selectedLocation & 
-               between(as.Date(Fehlerhaft_Datum_T01), input$dateRange[1], input$dateRange[2]))
+    monatliche_zaehlungen_liste <- list()
+    
+    # Schleife durch die Spalten _T01 bis _T40
+    for (i in 1:40) {
+      # Erzeuge den Spaltennamen
+      spaltenname <- paste0("Fehlerhaft_Datum_T", sprintf("%02d", i))
+      
+      # Überprüfe, ob die Spalte im DataFrame existiert
+      if (spaltenname %in% names(df)) {
+        # Wandle das Datum um und zähle pro Monat und Jahr
+        monatliche_zaehlung <- df %>%
+          mutate(Datum = as.Date(.[[spaltenname]], format = "%Y-%m-%d"),
+                 Monat = month(Datum),
+                 Jahr = year(Datum)) %>%
+          group_by(Jahr, Monat) %>%
+          summarise(Anzahl = n(), .groups = 'drop')
+        
+        # Speichere das Ergebnis in der Liste
+        monatliche_zaehlungen_liste[[spaltenname]] <- monatliche_zaehlung
+      } else {
+        # Gib eine Nachricht aus, wenn die Spalte nicht existiert
+        message(spaltenname, " existiert nicht im DataFrame.")
+      }
+    }
+    
+    gesammelte_daten <- bind_rows(monatliche_zaehlungen_liste, .id = "Bauteil")
+    
+    # Konvertiere 'Bauteil' zu einem lesbaren Format (entferne 'Fehlerhaft_Datum_T' und lasse nur die Nummer)
+    gesammelte_daten$Bauteil <- gsub("Fehlerhaft_Datum_T", "T", gesammelte_daten$Bauteil)
+    
+    # Erstelle eine neue Spalte 'MonatJahr' für die x-Achse des Diagramms
+    gesammelte_daten <- gesammelte_daten %>%
+      mutate(MonatJahr = paste(Jahr, sprintf("%02d", Monat), sep = "-"),
+             MonatJahr = as.Date(paste0(MonatJahr, "-01"))) # Setze einen Dummy-Tag
   })
   
   # Balkendiagramm
-  output$barPlot <- renderPlot({
-    # Umwandeln der Datumsstrings in Datumstypen
-    daten$Fehlerhaft_Datum_T01 <- as.Date(daten$Fehlerhaft_Datum_T01)
-    daten$Fehlerhaft_Datum_T02 <- as.Date(daten$Fehlerhaft_Datum_T02)
-    
-    # Berechnung der Anzahl von ID_T01 und ID_T02 pro Monat
-    count_per_month_T01 <- daten %>%
-      group_by(Monat_Jahr_T01 = floor_date(Fehlerhaft_Datum_T01, "month")) %>%
-      summarise(Anzahl_T01 = n())
-    
-    count_per_month_T02 <- daten %>%
-      group_by(Monat_Jahr_T02 = floor_date(Fehlerhaft_Datum_T02, "month")) %>%
-      summarise(Anzahl_T02 = n())
-    
-    
-    ggplot(filteredData(), aes(x = as.factor(Monat), fill = as.factor(Teil))) +
-      geom_bar(position = "stack") +
-      theme_minimal() +
-      labs(title = "Monatliche Ausfälle nach Teil", x = "Monat", y = "Anzahl der Ausfälle")
+  output$monatAuswahlUI <- renderUI({
+    if (input$auswahlModus == "einzel") {
+      selectInput("monatAuswahl", "Wähle einen Monat:",
+                  choices = unique(gesammelte_daten$MonatJahr))
+    }
   })
+  
+  # Erstelle das Balkendiagramm basierend auf der Auswahl
+  output$balkendiagramm <- renderPlot({
+    daten_gefiltert <- gesammelte_daten
+    
+    # Filtere die Daten, wenn ein spezifischer Monat ausgewählt wurde
+    if (input$auswahlModus == "einzel" && !is.null(input$monatAuswahl)) {
+      daten_gefiltert <- gesammelte_daten %>%
+        filter(MonatJahr == as.Date(input$monatAuswahl))
+    }
+    
+    ggplot(daten_gefiltert, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
+      geom_bar(stat = "identity", position = "stack") +
+      scale_fill_viridis_d() +
+      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil",
+           title = "Kumulierte Fehler pro Monat für alle Bauteile") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  })
+  
   
   # Ausfallverlauf
   output$trendPlot <- renderPlot({
@@ -106,4 +149,4 @@ server <- function(input, output, session) {
   })
 }
 
-shinyApp(ui, server)
+shinyApp(ui=ui, server=server)
