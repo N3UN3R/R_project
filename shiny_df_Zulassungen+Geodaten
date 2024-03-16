@@ -1,0 +1,231 @@
+---
+  title: "Case Study Group 7"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis XXX, Hendrik Dybus"
+date: "07.02.2024"
+output: 
+  html_document:
+  toc: true
+toc_float: true
+code_folding: hide
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Bibliothek
+Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich.
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#Installation und Laden des Pakets "install.load", falls erforderlich. 
+# Hinweis: Das "install.load"-Paket enthält die Funktion install_load.
+
+if(!require(install.load)){
+  install.packages("install.load")
+  library(install.load)
+}
+
+# Installation und Laden der genannten Pakete, falls erforderlich   
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+
+print("hallo")
+```
+
+#dataframe einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#print("starts")
+#write.csv(result_df_final, "sindy_data.csv", row.names = FALSE)
+
+df_eingelesen <- read.csv("final_df_T02.csv")
+
+glimpse(df_eingelesen)
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+zulassungen_filtered <- fread("DATA/Zulassungen/Zulassungen/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )# %>% 
+zulassungen_filtered <- zulassungen_filtered %>%
+  rename(ID_Fahrzeug = IDNummer)
+
+glimpse(zulassungen_filtered)
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+update_gemeinden <- function(data, old_name, new_name) {
+  # Ersetzen des alten Namens durch den neuen Namen, nur ganze Wörter
+  data$Gemeinden <- gsub(paste0("\\b", old_name, "\\b"), new_name, data$Gemeinden, perl = TRUE)
+  
+  return(data)
+}
+
+
+#dataframe einlesen
+df_eingelesen <- read.csv("final_df_T02.csv")
+
+# Einzigartige Werte vor der Anwendung der Funktion
+unique_before <- unique(zulassungen_filtered$Gemeinden)
+
+# Anwenden der Funktion update_gemeinden auf die Zulassungsdaten
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "AACH", "AACHEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "AACH1", "AACHEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "OBERHAUSEN1", "OBERHAUSEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "OBERHAUSEN2", "OBERHAUSEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "OBERHAUSEN3", "OBERHAUSEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "MUENSTER1", "MUENSTER")
+
+# Einzigartige Werte nach der Anwendung der Funktion
+unique_after <- unique(zulassungen_filtered$Gemeinden)
+
+# Vergleich der einzigartigen Werte vor und nach der Anwendung der Funktion
+added_values <- setdiff(unique_after, unique_before)
+removed_values <- setdiff(unique_before, unique_after)
+
+print("Hinzugefügte Werte:")
+print(added_values)
+print("Entfernte Werte:")
+print(removed_values)
+
+# Merge der Daten
+result <- merge(df_eingelesen, zulassungen_filtered[, c("ID_Fahrzeug", "Gemeinden")], by = "ID_Fahrzeug", all.x = TRUE)
+glimpse(result)
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+library(dplyr)
+
+# Liste der relevanten Städte definieren
+selected_cities <- c("AACHEN", "BONN", "KOELN", "DORTMUND", "BIELEFELD", "OBERHAUSEN", "BOCHUM", "MUENSTER")
+
+# Liste der relevanten Spalten definieren
+selected_columns <- c("ID_Fahrzeug", "Gemeinden")
+
+# Auswahl der Daten für die ausgewählten Städte
+result_selected <- result %>%
+  filter(Gemeinden %in% selected_cities) %>%
+  select(all_of(selected_columns))
+
+# Anzeigen der Ergebnisse
+glimpse(zulassungen_filtered_selected)
+
+```
+
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+result <- merge(df_eingelesen, zulassungen_filtered[, c("ID_Fahrzeug", "Gemeinden")], by = "ID_Fahrzeug", all.x = TRUE)
+#geodaten <- geodaten %>%
+# rename(Gemeinden = Gemeinde)
+
+glimpse(result)
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+geodaten <- fread("Data/Geodaten/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
+geodaten <- geodaten %>%
+  rename(Gemeinden = Gemeinde)
+glimpse(geodaten)
+
+einzigartige_werte <- unique(geodaten$Gemeinden)
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+filter_gemeinden <- function(data, prefixes) {
+  filtered_data <- list()
+  
+  for (prefix in prefixes) {
+    # Konvertieren der Gemeinden in Großbuchstaben
+    data$Gemeinden <- toupper(data$Gemeinden)
+  
+    # Filtern der Gemeinden, die mit dem aktuellen Präfix beginnen
+    filtered_data[[prefix]] <- data[grepl(paste0("^", prefix), data$Gemeinden), ]
+  }
+  
+  return(filtered_data)
+}
+
+# Präfixe definieren
+prefixes <- c("AACH", "BON", "KOEL", "DORT", "BIEL", "OBERHAUS", "BOCH", "MUENSTER")
+
+# Anwendung der Funktion auf die Gemeindedaten
+geodaten_filtered <- filter_gemeinden(geodaten_filtered, prefixes)
+
+# Überprüfen der gefilterten Ergebnisse für jedes Präfix
+for (prefix in prefixes) {
+  cat("Gefilterte Ergebnisse für", prefix, ":\n")
+  print(unique(geodaten_filtered[[prefix]]$Gemeinden))
+  cat("\n")
+}
+
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+update_gemeinden <- function(data, old_name, new_name) {
+  # Ersetzen des alten Namens durch den neuen Namen, nur ganze Wörter
+  data$Gemeinden <- gsub(paste0("\\b", old_name, "\\b"), new_name, data$Gemeinden, perl = TRUE)
+  
+  return(data)
+}
+
+
+unique_before <- unique(zulassungen_filtered$Gemeinden)
+
+# Anwenden der Funktion für die gewünschten Änderungen
+geodaten_filtered <- update_gemeinden(geodaten, "AACH", "AACHEN")
+geodaten_filtered <- update_gemeinden(geodaten, "AACH1", "AACHEN")
+geodaten_filtered <- update_gemeinden(geodaten, "OBERHAUSEN1", "OBERHAUSEN")
+geodaten_filtered <- update_gemeinden(geodaten, "OBERHAUSEN2", "OBERHAUSEN")
+geodaten_filtered <- update_gemeinden(geodaten, "OBERHAUSEN3", "OBERHAUSEN")
+geodaten_filtered <- update_gemeinden(geodaten, "MUENSTER1", "MUENSTER")
+
+# Überprüfen der einzigartigen Werte nach der Aktualisierung
+unique_geodaten <- unique(geodaten$Gemeinden)
+
+# Einzigartige Werte nach der Anwendung der Funktion
+unique_after <- unique(zulassungen_filtered$Gemeinden)
+
+# Vergleich der einzigartigen Werte vor und nach der Anwendung der Funktion
+added_values <- setdiff(unique_after, unique_before)
+removed_values <- setdiff(unique_before, unique_after)
+
+print("Hinzugefügte Werte:")
+print(added_values)
+print("Entfernte Werte:")
+print(removed_values)
+```
+
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+result_final <- merge(result, geodaten_filtered[, c("Gemeinden", "Laengengrad","Breitengrad")], by = "Gemeinden", all.x = TRUE)
+
+glimpse(result_final)
+
+
+write.csv(result_final, "final_Df_2.csv", row.names = TRUE)
+
+
+```
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+library(dplyr)
+
+# Liste der relevanten Städte definieren
+selected_cities <- c("AACHEN", "BONN", "KOELN", "DORTMUND", "BIELEFELD", "OBERHAUSEN", "BOCHUM", "MUENSTER")
+
+# Liste der relevanten Spalten definieren
+selected_columns <- c("Gemeinden", "ID_Fahrzeug", "X", "ID_T01.x", "Fehlerhaft_Datum_T01.x", "Fehlerhaft_Fahrleistung_T01.x",
+                       "ID_T01.y", "Fehlerhaft_Datum_T01.y", "Fehlerhaft_Fahrleistung_T01.y", "ID_T02", 
+                       "Fehlerhaft_Datum_T02", "Fehlerhaft_Fahrleistung_T02", "Laengengrad", "Breitengrad")
+
+# Auswahl der Daten für die ausgewählten Städte
+result_final_selected <- result_final %>%
+  filter(Gemeinden %in% selected_cities) %>%
+  select(all_of(selected_columns))
+
+# Anzeigen der Ergebnisse
+glimpse(result_final_selected)
+
+```
