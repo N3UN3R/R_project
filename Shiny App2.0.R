@@ -16,7 +16,6 @@ library(ggmap)
 
 # Daten laden
 df <- read_csv("final_vorläufig.csv")
-#zulassungen <- read_csv("ZulassungenGefiltert.csv") # Annahme: Pfad angepasst
 
 ui <- fluidPage(
   theme = shinytheme("flatly"), # Verwendung eines vordefinierten Themes; anpassbar
@@ -43,17 +42,11 @@ ui <- fluidPage(
   titlePanel("Ausfallanalyse und Prognose"),
   sidebarLayout(
     sidebarPanel(
-      #selectInput("selectedPart", "Teil auswählen", choices = unique(df$ID_T01)),
       radioButtons("auswahlModusGemeinden", "Anzeigemodus:",
                    choices = list("Alle Gemeinden anzeigen" = "alle", "Eine Gemeinde auswählen" = "einzel")),
       uiOutput("ortAuswahlUI"),
-      #selectInput("selectedLocation", "Ort auswählen", choices = NULL), # Wird serverseitig gefüllt
-      #selectInput("selectedMonth", "Monat auswählen", choices = NULL),
-      #actionButton("update", "Daten aktualisieren"),
-      # Dropdown-Menü für die Auswahl zwischen allen Monaten oder einem spezifischen Monat
       radioButtons("auswahlModusMonat", "Anzeigemodus:",
                    choices = list("Alle Monate anzeigen" = "alle", "Einen Monat auswählen" = "einzel")),
-      # Dropdown-Menü für die Monatsauswahl, das dynamisch basierend auf den vorhandenen Daten gefüllt wird
       uiOutput("monatAuswahlUI")
     ),
     mainPanel(
@@ -84,7 +77,7 @@ server <- function(input, output, session) {
           mutate(Datum = as.Date(.[[spaltenname]], format = "%Y-%m-%d"),
                  Monat = month(Datum),
                  Jahr = year(Datum)) %>%
-          group_by(Jahr, Monat) %>%
+          group_by(Gemeinden, Jahr, Monat) %>%
           summarise(Anzahl = n(), .groups = 'drop')
         
         # Speichere das Ergebnis in der Liste
@@ -104,43 +97,71 @@ server <- function(input, output, session) {
     gesammelte_daten <- gesammelte_daten %>%
       mutate(MonatJahr = paste(Jahr, sprintf("%02d", Monat), sep = "-"),
              MonatJahr = as.Date(paste0(MonatJahr, "-01"))) # Setze einen Dummy-Tag
+    
+    # Füge die Koordinaten hinzu
+    coordinates_list <- list()
+    for (gemeinde in unique(df$Gemeinden)) {
+      coordinates <- df %>%
+        filter(Gemeinden == gemeinde) %>%
+        select(Laengengrad, Breitengrad) %>%
+        distinct()
+      coordinates_list[[gemeinde]] <- coordinates
+    }
+    
+    # Füge die Koordinaten zu gesammelte_daten hinzu
+    gesammelte_daten <- gesammelte_daten %>%
+      left_join(bind_rows(coordinates_list, .id = "Gemeinden"), by = "Gemeinden")
+    
+    return(gesammelte_daten)
+  })  
+  
+  # Filtern der Daten nach Ort
+  filteredDataByLocation <- reactive({
+    filteredData() %>%
+      filter(Gemeinden == input$ortAuswahl)
   })
   
-
+  # Filtern der Daten nach Monat
+  filteredDataByMonth <- reactive({
+    daten <- filteredData()
+    if (input$auswahlModusMonat == "einzel" && !is.null(input$monatAuswahl)) {
+      selectedMonth <- as.Date(paste0(input$monatAuswahl, "-01"))
+      daten <- daten %>% filter(MonatJahr == selectedMonth)
+    }
+    return(daten)
+  })
   
-  # UI die die möglichen Städte anzeigt
+  # UI, um die möglichen Gemeinden anzuzeigen
   output$ortAuswahlUI <- renderUI({
-    if (input$auswahlModus == "einzel") {
+    if (input$auswahlModusGemeinden == "einzel") {
       choices <- unique(df$Gemeinden)
       selectInput("ortAuswahl", "Wähle eine Gemeinde:",
                   choices = choices)
     }
   })
   
-  # UI die die möglichen Monate anzeigt
+  # UI, um die möglichen Monate anzuzeigen
   output$monatAuswahlUI <- renderUI({
-    if (input$auswahlModus == "einzel") {
+    if (input$auswahlModusMonat == "einzel") {
       choices <- unique(format(filteredData()$MonatJahr, "%Y-%m"))
       selectInput("monatAuswahl", "Wähle einen Monat:",
                   choices = choices)
     }
   })
   
-  # Erstelle das Balkendiagramm basierend auf der Auswahl
+  # Erstellen des Balkendiagramms basierend auf der Auswahl
   output$stackedBarPlot <- renderPlot({
-    daten <- filteredData()
-    
-    # Filtere die Daten, wenn ein spezifischer Monat ausgewählt wurde
-    if (input$auswahlModus == "einzel" && !is.null(input$monatAuswahl)) {
-      selectedMonth <- as.Date(paste0(input$monatAuswahl, "-01"))
-      daten <- daten %>% filter(MonatJahr == selectedMonth)
-    }
+    daten <- filteredDataByMonth()
     
     ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_fill_viridis_d() +
       labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil",
-           title = "Kumulierte Fehler pro Monat für alle Bauteile") +
+           title = "Kumulierte Fehler pro Monat für alle Bauteile in ausgewählter Gemeinde") +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
+}
+
+# App ausführen
+shinyApp(ui, server = server)
