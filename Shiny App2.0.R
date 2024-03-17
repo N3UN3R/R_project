@@ -188,9 +188,19 @@ server <- function(input, output, session) {
     
     # Aggregieren der Daten nach Bauteil, um den Durchschnitt für das ausgewählte Bauteil im ersten Quartal zu erhalten
     selected_prognosis_item <- input$selectedPrognosisItem
+    
+    # (1) Berechnet den Gesamtdurchschnitt für das ausgewählte Bauteil über alle Gemeinden
     first_quarter_aggregated <- first_quarters %>%
       filter(Bauteil == selected_prognosis_item) %>%
       summarise(Anzahl = mean(Anzahl))
+    
+    # (2) Berechnet den Durchschnitt pro Gemeinde für das ausgewählte Bauteil
+    durchschnittProGemeinde <- first_quarters %>%
+      filter(Bauteil == selected_prognosis_item) %>%
+      group_by(Gemeinden) %>%
+      summarise(DurchschnittProGemeinde = mean(Anzahl), .groups = 'drop')
+    
+    return(first_quarter_aggregated,durchschnittProGemeinde)
     
     return(first_quarter_aggregated)
   })
@@ -198,7 +208,7 @@ server <- function(input, output, session) {
   # Prognose für das erste Quartal 2017 basierend auf den Werten aus den ersten Quartalen von 2014, 2015 und 2016
   output$prognosis <- renderPrint({
     req(prognosisData())  # Stellen Sie sicher, dass prognosisData verfügbar ist
-    paste("Prognose für", input$selectedPrognosisItem, "im ersten Quartal 2017:", prognosisData()$Anzahl)
+    paste("Prognose für", input$selectedPrognosisItem, "im ersten Quartal 2017:", prognosisData()$gesamtDurchschnitt$Anzahl)
   })
   
   # Reaktive Expression für gefilterte Daten (Ausfallverlauf)
