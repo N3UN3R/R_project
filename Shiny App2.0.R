@@ -54,7 +54,9 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Balkendiagramm", plotOutput("stackedBarPlot")),
         tabPanel("Ausfallverlauf", plotOutput("failureTrend")),
-        tabPanel("Interaktive Karte", leafletOutput("interactiveMap")),
+        tabPanel("map", leafletOutput("map"),
+                 absolutePanel(
+                   top = 250, left = 20)),
         tabPanel("Datentabelle", DTOutput("dataTable"))
       )
     )
