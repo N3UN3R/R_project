@@ -161,6 +161,11 @@ server <- function(input, output, session) {
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
+
+  # Datentabelle
+  output$dataTable <- renderDT({
+    datatable(filteredData())
+  })
 }
 
 # App ausführen
