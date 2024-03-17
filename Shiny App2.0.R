@@ -280,26 +280,6 @@ server <- function(input, output, session) {
     
   })
 
-  #maps
-  output$map <- renderLeaflet({
-    
-    filteredData$Laengengrad <- gsub(",", ".", filteredData$Laengengrad)
-    filteredData$Breitengrad <- gsub(",", ".", filteredData$Breitengrad)
-    filteredData$Laengengrad <- as.numeric(filteredData$Laengengrad)
-    filteredData$Breitengrad <- as.numeric(filteredData$Breitengrad)
-    
-    geodaten_gemeinden <- filteredData %>%
-      #wähle die columns gemeinden, und Koordinaten einträge
-      select(Gemeinden, Laengengrad, Breitengrad) %>%
-      #entferne doppelungen
-      distinct()
-    
-    # Erstellen der Leaflet-Karte
-    leaflet(geodaten_gemeinden) %>%
-      addTiles() %>%  # Hinzufügen des Standardkarten-Layers
-      addMarkers(lng = ~Laengengrad, lat = ~Breitengrad, popup = ~Gemeinden) # Annahme: Spaltennamen sind longitude, latitude und Name
-  })
-
     #maps
   # Hinzufügen der Karten-Render-Funktion
   output$map <- renderLeaflet({
