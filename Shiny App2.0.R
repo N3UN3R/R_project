@@ -289,6 +289,16 @@ server <- function(input, output, session) {
       addTiles() %>%  # Hinzufügen des Standardkarten-Layers
       addMarkers(lng = ~Laengengrad, lat = ~Breitengrad, popup = ~Gemeinden) # Annahme: Spaltennamen sind longitude, latitude und Name
   })
+
+    #maps
+  # Hinzufügen der Karten-Render-Funktion
+  output$map <- renderLeaflet({
+    # Erstellen der Leaflet-Karte mit den vorbereiteten Daten
+    leaflet(gemeinden_geodaten) %>%
+      setView(lng = 10.4515, lat = 51.1657, zoom = 6) %>%
+      addTiles() %>%
+      addMarkers(lng = ~Laengengrad, lat = ~Breitengrad)#, popup = ~Gemeinden)
+  })
   
   # Datentabelle
   output$dataTable <- renderDT({
