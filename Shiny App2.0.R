@@ -161,6 +161,34 @@ server <- function(input, output, session) {
     }
     return(daten)
   })
+
+  # UI für die Auswahl der Einzelteile für die Prognose und Ausfallverlauf
+  output$prognosisSelectionUI <- renderUI({
+    selectInput("selectedPrognosisItem", "Wähle ein Teil für die Prognose:", choices = unique(filteredData()$Bauteil))
+  })
+
+  # Reaktive Funktion zur Berechnung der Prognose
+  prognosisData <- reactive({
+    req(filteredData())  # Stellen Sie sicher, dass filteredData verfügbar ist
+    
+    # Filtern der Daten für die ersten Quartale von 2014, 2015 und 2016
+    first_quarters <- filteredData() %>%
+      filter(MonatJahr >= as.Date("2014-01-01") & MonatJahr <= as.Date("2016-03-31"))
+    
+    # Aggregieren der Daten nach Bauteil, um den Durchschnitt für das ausgewählte Bauteil im ersten Quartal zu erhalten
+    selected_prognosis_item <- input$selectedPrognosisItem
+    first_quarter_aggregated <- first_quarters %>%
+      filter(Bauteil == selected_prognosis_item) %>%
+      summarise(Anzahl = mean(Anzahl))
+    
+    return(first_quarter_aggregated)
+  })
+  
+  # Prognose für das erste Quartal 2017 basierend auf den Werten aus den ersten Quartalen von 2014, 2015 und 2016
+  output$prognosis <- renderPrint({
+    req(prognosisData())  # Stellen Sie sicher, dass prognosisData verfügbar ist
+    paste("Prognose für", input$selectedPrognosisItem, "im ersten Quartal 2017:", prognosisData()$Anzahl)
+  })
   
   # Reaktive Expression für gefilterte Daten (Ausfallverlauf)
   filteredData3 <- reactive({
