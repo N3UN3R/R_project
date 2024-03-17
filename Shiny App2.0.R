@@ -42,7 +42,7 @@ ui <- fluidPage(
   titlePanel("Ausfallanalyse und Prognose"),
   sidebarLayout(
     sidebarPanel(
-      radioButtons("auswahlModusGemeinden", "Anzeigemodus:",
+      radioButtons("auswahlModusGemeinde", "Anzeigemodus:",
                    choices = list("Alle Gemeinden anzeigen" = "alle", "Eine Gemeinde auswählen" = "einzel")),
       uiOutput("ortAuswahlUI"),
       radioButtons("auswahlModusMonat", "Anzeigemodus:",
@@ -115,15 +115,29 @@ server <- function(input, output, session) {
     return(gesammelte_daten)
   })  
   
-  # Filtern der Daten nach Ort
-  filteredDataByLocation <- reactive({
-    filteredData() %>%
-      filter(Gemeinden == input$ortAuswahl)
+
+  
+  # UI für Gemeindenauswahl
+  output$ortAuswahlUI <- renderUI({
+    if (input$auswahlModusGemeinde == "einzel") {
+      selectInput("ortAuswahl", "Wähle eine Gemeinde:", choices = unique(df$Gemeinden))
+    }
   })
   
-  # Filtern der Daten nach Monat
-  filteredDataByMonth <- reactive({
+  # UI für Monatsauswahl
+  output$monatAuswahlUI <- renderUI({
+    if (input$auswahlModusMonat == "einzel") {
+      choices <- unique(format(filteredData()$MonatJahr, "%Y-%m"))
+      selectInput("monatAuswahl", "Wähle einen Monat:", choices = choices)
+    }
+  })
+  
+  # Reaktive Expression für gefilterte Daten
+  filteredData2 <- reactive({
     daten <- filteredData()
+    if (input$auswahlModusGemeinde == "einzel" && !is.null(input$ortAuswahl)) {
+      daten <- daten %>% filter(Gemeinden == input$ortAuswahl)
+    }
     if (input$auswahlModusMonat == "einzel" && !is.null(input$monatAuswahl)) {
       selectedMonth <- as.Date(paste0(input$monatAuswahl, "-01"))
       daten <- daten %>% filter(MonatJahr == selectedMonth)
@@ -131,37 +145,20 @@ server <- function(input, output, session) {
     return(daten)
   })
   
-  # UI, um die möglichen Gemeinden anzuzeigen
-  output$ortAuswahlUI <- renderUI({
-    if (input$auswahlModusGemeinden == "einzel") {
-      choices <- unique(df$Gemeinden)
-      selectInput("ortAuswahl", "Wähle eine Gemeinde:",
-                  choices = choices)
-    }
-  })
-  
-  # UI, um die möglichen Monate anzuzeigen
-  output$monatAuswahlUI <- renderUI({
-    if (input$auswahlModusMonat == "einzel") {
-      choices <- unique(format(filteredData()$MonatJahr, "%Y-%m"))
-      selectInput("monatAuswahl", "Wähle einen Monat:",
-                  choices = choices)
-    }
-  })
-  
   # Erstellen des Balkendiagramms basierend auf der Auswahl
   output$stackedBarPlot <- renderPlot({
-    daten <- filteredDataByMonth()
+    #daten <- filteredDataByMonth()
     
-    ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
+    ggplot(filteredData2(), aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_fill_viridis_d() +
-      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil",
+      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil", 
            title = "Kumulierte Fehler pro Monat für alle Bauteile in ausgewählter Gemeinde") +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
   })
-
+  
   # Datentabelle
   output$dataTable <- renderDT({
     datatable(filteredData())
