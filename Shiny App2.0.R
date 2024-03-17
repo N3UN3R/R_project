@@ -47,7 +47,8 @@ ui <- fluidPage(
       uiOutput("ortAuswahlUI"),
       radioButtons("auswahlModusMonat", "Anzeigemodus:",
                    choices = list("Alle Monate anzeigen" = "alle", "Einen Monat auswählen" = "einzel")),
-      uiOutput("monatAuswahlUI")
+      uiOutput("monatAuswahlUI"),
+      uiOutput("BauteilAuswahlUI")
     ),
     mainPanel(
       tabsetPanel(
@@ -115,6 +116,22 @@ server <- function(input, output, session) {
     return(gesammelte_daten)
   })  
   
+  # Überwache Änderungen bei den beiden Auswahlmöglichkeiten
+  observeEvent(c(input$auswahlModusGemeinde, input$auswahlModusMonat), {
+    # Überprüfe, ob bei beiden 'Einzel' ausgewählt wurde
+    if(input$auswahlModusGemeinde == "einzel" && input$auswahlModusMonat == "einzel") {
+      # Zeige eine Benachrichtigungsnachricht an
+      #shiny::showNotification("Du hast 'Einzel' für Gemeinde und Monat ausgewählt! Dadurch ist die Darstellung des Ausfallverlaufs nicht mehr sinnvoll. Den Wert kannst du dennoch ablesen!", type = "message", duration = 20)
+      
+      # Alternativ: Zeige ein Modal an
+      showModal(modalDialog(
+        title = "Benachrichtigung",
+        "Du hast 'Einzel' für Gemeinde und Monat ausgewählt! Dadurch ist die Darstellung des Ausfallverlaufs nicht mehr sinnvoll. Den Wert kannst du dennoch ablesen!",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    }
+  }, ignoreInit = TRUE) # `ignoreInit = TRUE` sorgt dafür, dass dieser Code nicht beim Initialisieren der App ausgeführt wird.
 
   
   # UI für Gemeindenauswahl
@@ -132,7 +149,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Reaktive Expression für gefilterte Daten
+  # Reaktive Expression für gefilterte Daten (Balkendiagramm)
   filteredData2 <- reactive({
     daten <- filteredData()
     if (input$auswahlModusGemeinde == "einzel" && !is.null(input$ortAuswahl)) {
@@ -141,6 +158,25 @@ server <- function(input, output, session) {
     if (input$auswahlModusMonat == "einzel" && !is.null(input$monatAuswahl)) {
       selectedMonth <- as.Date(paste0(input$monatAuswahl, "-01"))
       daten <- daten %>% filter(MonatJahr == selectedMonth)
+    }
+    return(daten)
+  })
+  
+  # Reaktive Expression für gefilterte Daten (Ausfallverlauf)
+  filteredData3 <- reactive({
+    daten <- filteredData()
+    if (input$auswahlModusGemeinde == "einzel" && !is.null(input$ortAuswahl)) {
+      daten <- daten %>% filter(Gemeinden == input$ortAuswahl)
+    }
+    if (input$auswahlModusMonat == "einzel" && !is.null(input$monatAuswahl)) {
+      selectedMonth <- as.Date(paste0(input$monatAuswahl, "-01"))
+      daten <- daten %>% filter(MonatJahr == selectedMonth)
+    }
+    if (input$auswahlModusGemeinde == "alle") {
+      daten <- daten %>%
+        group_by(MonatJahr, Bauteil) %>%
+        summarise(Anzahl = sum(Anzahl), .groups = 'drop')
+      
     }
     return(daten)
   })
@@ -156,6 +192,42 @@ server <- function(input, output, session) {
            title = "Kumulierte Fehler pro Monat für alle Bauteile in ausgewählter Gemeinde") +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+  })
+  
+  
+  
+  #Prognose und Verlauf 
+  # UI für die Auswahl der Einzelteile
+  output$BauteilAuswahlUI <- renderUI({
+    selectInput("BauteilAuswahl", "Wähle ein Teil:", choices = unique(filteredData()$Bauteil))
+  })
+  
+  # Ausfallverlauf für jedes Einzelteil von 2014-2016
+  output$failureTrend <- renderPlot({
+    # Daten von 2014 bis 2016 filtern
+    daten <- filteredData3()
+    daten <- daten %>% 
+      filter(Bauteil == input$BauteilAuswahl) %>%
+      na.omit(daten)
+    
+    y_max <- max(daten$Anzahl, na.rm = TRUE) * 1.4 # 10% mehr Platz oben
+    y_min <- min(daten$Anzahl, na.rm = TRUE) * 0.6 # 10% Puffer unten
+  
+    print(y_max)
+    print(y_min)
+    #print(max(daten$Anzahl))
+    # Plot erstellen
+    p <- ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
+      geom_line() +
+      geom_point() +
+      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", color = "Bauteil",
+           title = "Ausfallverlauf von 2014 bis 2016 für jedes Einzelteil") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      ylim(y_min, y_max)  
+    
+    return(p)
     
   })
   
