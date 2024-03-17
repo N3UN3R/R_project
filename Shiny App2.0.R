@@ -63,6 +63,15 @@ ui <- fluidPage(
   )
 )
 
+#vorbereitung  für Visualisierung auf map
+df$Laengengrad <- as.numeric(gsub("(\\d+)(\\d{6})$", "\\1.\\2", df$Laengengrad))
+df$Breitengrad <- as.numeric(gsub("(\\d+)(\\d{6})$", "\\1.\\2", df$Breitengrad))
+
+# Selektiere nur die benötigten Spalten und entferne Duplikate
+gemeinden_geodaten <- df %>%
+  select(Gemeinden, Laengengrad, Breitengrad) %>%
+  distinct()
+
 server <- function(input, output, session) {
   # Reaktive Ausdrücke für gefilterte Daten
   filteredData <- reactive({
