@@ -1597,8 +1597,11 @@ Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen.</p>
 </div>
 <div id="library" class="section level2">
 <h2>Library</h2>
+<div id="shiny-app-library" class="section level3">
+<h3>Shiny-App Library</h3>
 <p>Für die Durchführung der folgenden datengestützten Analyse sind
-mehrere <strong>R-Pakete</strong> erforderlich.</p>
+mehrere <strong>R-Pakete</strong> erforderlich. Insbesondere sind
+folgend diese Pakete benutzt:</p>
 <pre class="r"><code># Überprüfen, ob das Paket &quot;install.load&quot; verfügbar ist und wenn nicht, installieren
 if(!require(install.load)){
   install.packages(&quot;install.load&quot;)
@@ -1619,6 +1622,29 @@ install_load(&quot;dplyr&quot;,     # Datenmanipulation
 # Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
 # Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.</code></pre>
 </div>
+<div id="allgemeine-aufgaben-library" class="section level3">
+<h3>Allgemeine Aufgaben Library</h3>
+<p>Hier ist die Library zu sehen, die für die Allgemeinen Aufgaben
+benutzt wurde:</p>
+<pre class="r"><code># Überprüfen, ob das Paket &quot;install.load&quot; verfügbar ist und wenn nicht, installieren und laden
+if(!require(&quot;install.load&quot;)){
+  install.packages(&quot;install.load&quot;)
+  library(install.load)
+}
+
+# Mit der install_load() Funktion werden die folgenden Pakete installiert und geladen:
+install_load(&quot;readr&quot;,        # Einlesen von Daten
+             &quot;dplyr&quot;,        # Datenmanipulation
+             &quot;ggplot2&quot;,      # Erstellung von Grafiken
+             &quot;knitr&quot;,        # Erstellung von dynamischen Berichten
+             &quot;tidyverse&quot;,    # Sammlung von Paketen zur Datenmanipulation und -visualisierung
+             &quot;plotly&quot;,       # Interaktive Grafiken
+             &quot;moments&quot;)      # Statistische Momentberechnungen
+
+# Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
+# Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.</code></pre>
+</div>
+</div>
 <div id="importieren-der-daten" class="section level2">
 <h2>Importieren der Daten</h2>
 </div>
@@ -1630,8 +1656,8 @@ install_load(&quot;dplyr&quot;,     # Datenmanipulation
 <p>Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt.
 Ziel der App ist es eine übersichtliche Darstellung der Daten zu
 geben.</p>
-<div id="implementierung-der-shiny-app" class="section level3">
-<h3>Implementierung der Shiny-App</h3>
+<div id="implementierung-shiny-app" class="section level3">
+<h3>Implementierung Shiny-App</h3>
 <p>Der erste Schritt bei der Implementierung der Shiny-App sind zunächst
 die nötigen R-Pakete zu installieren. Hier sind es ‘leaflet’ und
 ‘ggplot2’. Weiterhin wurde der ebenfalls noch der Datenanalyse
