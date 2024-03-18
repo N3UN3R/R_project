@@ -4,7 +4,9 @@ if (!require("ggplot2")) install.packages("ggplot2")
 if (!requireNamespace("ggmap", quietly = TRUE)) {
   install.packages("ggmap")
 }
+if (!require("shinydashboard")) install.packages("shinydashboard")
 
+library(shinydashboard)
 library(shiny)
 library(leaflet)
 library(ggplot2)
@@ -36,8 +38,11 @@ ui <- fluidPage(
         color: white; /* Farbe des Titels anpassen */
         font-size: 24px; /* Größe des Titels anpassen */
       }
+      
     "))
   ),
+  
+  
   
   titlePanel("Ausfallanalyse und Prognose"),
   sidebarLayout(
@@ -48,16 +53,19 @@ ui <- fluidPage(
       radioButtons("auswahlModusMonat", "Anzeigemodus:",
                    choices = list("Alle Monate anzeigen" = "alle", "Einen Monat auswählen" = "einzel")),
       uiOutput("monatAuswahlUI"),
-      uiOutput("BauteilAuswahlUI")
+      uiOutput("BauteilAuswahlUI"),
+      uiOutput("dynamicValueBox")
     ),
     mainPanel(
       tabsetPanel(
         tabPanel("Balkendiagramm", plotOutput("stackedBarPlot")),
         tabPanel("Ausfallverlauf", plotOutput("failureTrend")),
         tabPanel("map", leafletOutput("map"),
-                 absolutePanel(
-                   top = 250, left = 20)),
+                 absolutePanel(top = 250, left = 20)),
         tabPanel("Datentabelle", DTOutput("dataTable"))
+        
+        
+        
       )
     )
   )
@@ -160,6 +168,12 @@ server <- function(input, output, session) {
     }
   })
   
+  #Prognose und Verlauf 
+  # UI für die Auswahl der Einzelteile
+  output$BauteilAuswahlUI <- renderUI({
+    selectInput("BauteilAuswahl", "Wähle ein Teil:", choices = unique(filteredData()$Bauteil))
+  })
+  
   # Reaktive Expression für gefilterte Daten (Balkendiagramm)
   filteredData2 <- reactive({
     daten <- filteredData()
@@ -171,44 +185,6 @@ server <- function(input, output, session) {
       daten <- daten %>% filter(MonatJahr == selectedMonth)
     }
     return(daten)
-  })
-
-  # UI für die Auswahl der Einzelteile für die Prognose und Ausfallverlauf
-  output$prognosisSelectionUI <- renderUI({
-    selectInput("selectedPrognosisItem", "Wähle ein Teil für die Prognose:", choices = unique(filteredData()$Bauteil))
-  })
-
-  # Reaktive Funktion zur Berechnung der Prognose
-  prognosisData <- reactive({
-    req(filteredData())  # Stellen Sie sicher, dass filteredData verfügbar ist
-    
-    # Filtern der Daten für die ersten Quartale von 2014, 2015 und 2016
-    first_quarters <- filteredData() %>%
-      filter(MonatJahr >= as.Date("2014-01-01") & MonatJahr <= as.Date("2016-03-31"))
-    
-    # Aggregieren der Daten nach Bauteil, um den Durchschnitt für das ausgewählte Bauteil im ersten Quartal zu erhalten
-    selected_prognosis_item <- input$selectedPrognosisItem
-    
-    # (1) Berechnet den Gesamtdurchschnitt für das ausgewählte Bauteil über alle Gemeinden
-    first_quarter_aggregated <- first_quarters %>%
-      filter(Bauteil == selected_prognosis_item) %>%
-      summarise(Anzahl = mean(Anzahl))
-    
-    # (2) Berechnet den Durchschnitt pro Gemeinde für das ausgewählte Bauteil
-    durchschnittProGemeinde <- first_quarters %>%
-      filter(Bauteil == selected_prognosis_item) %>%
-      group_by(Gemeinden) %>%
-      summarise(DurchschnittProGemeinde = mean(Anzahl), .groups = 'drop')
-    
-    return(first_quarter_aggregated,durchschnittProGemeinde)
-    
-    return(first_quarter_aggregated)
-  })
-  
-  # Prognose für das erste Quartal 2017 basierend auf den Werten aus den ersten Quartalen von 2014, 2015 und 2016
-  output$prognosis <- renderPrint({
-    req(prognosisData())  # Stellen Sie sicher, dass prognosisData verfügbar ist
-    paste("Prognose für", input$selectedPrognosisItem, "im ersten Quartal 2017:", prognosisData()$gesamtDurchschnitt$Anzahl)
   })
   
   # Reaktive Expression für gefilterte Daten (Ausfallverlauf)
@@ -229,7 +205,7 @@ server <- function(input, output, session) {
     }
     return(daten)
   })
-  
+
   # Erstellen des Balkendiagramms basierend auf der Auswahl
   output$stackedBarPlot <- renderPlot({
     #daten <- filteredDataByMonth()
@@ -244,13 +220,40 @@ server <- function(input, output, session) {
     
   })
   
-  
-  
-  #Prognose und Verlauf 
-  # UI für die Auswahl der Einzelteile
-  output$BauteilAuswahlUI <- renderUI({
-    selectInput("BauteilAuswahl", "Wähle ein Teil:", choices = unique(filteredData()$Bauteil))
+  # Reaktive Funktion zur Berechnung der Prognose
+  prognosisData <- reactive({
+    req(filteredData())  # Stellen Sie sicher, dass filteredData verfügbar ist
+    
+    # Filtern der Daten für die ersten Quartale von 2014, 2015 und 2016
+    first_quarters <- filteredData() %>%
+      filter(MonatJahr >= as.Date("2014-01-01") & MonatJahr <= as.Date("2014-03-31"))
+    
+    # Aggregieren der Daten nach Bauteil, um den Durchschnitt für das ausgewählte Bauteil im ersten Quartal zu erhalten
+    selected_prognosis_item <- input$BauteilAuswahl
+    first_quarter_aggregated <- first_quarters %>%
+      filter(Bauteil == selected_prognosis_item) %>%
+      summarise(Anzahl = mean(Anzahl))
+    
+    return(first_quarter_aggregated)
   })
+  
+  output$dynamicValueBox <- renderUI({
+    value <- round(prognosisData()$Anzahl) # Hier könntest du einen reaktiven Ausdruck oder eine berechnete Variable einsetzen
+    glimpse(prognosisData)
+    subtitleText <- paste("Prognose für", input$BauteilAuswahl, "im ersten Quartal 2017")
+    tags$div(
+      id = "custom-value-box",
+      style = "padding: 20px; background-color: Lightsteelblue; color: white; border-radius: 5px; border: 2px solid #4682B4; margin-bottom: 20px;",
+      tags$h3(value, style = "margin-top: 0;"),
+      tags$p(subtitleText, style = "margin-bottom: 0;")
+    )
+  })
+  
+  
+  
+ 
+  
+
   
   # Ausfallverlauf für jedes Einzelteil von 2014-2016
   output$failureTrend <- renderPlot({
@@ -279,15 +282,25 @@ server <- function(input, output, session) {
     return(p)
     
   })
-
-    #maps
-  # Hinzufügen der Karten-Render-Funktion
+  
+  #maps
   output$map <- renderLeaflet({
-    # Erstellen der Leaflet-Karte mit den vorbereiteten Daten
-    leaflet(gemeinden_geodaten) %>%
-      setView(lng = 10.4515, lat = 51.1657, zoom = 6) %>%
-      addTiles() %>%
-      addMarkers(lng = ~Laengengrad, lat = ~Breitengrad)#, popup = ~Gemeinden)
+    
+    filteredData$Laengengrad <- gsub(",", ".", filteredData$Laengengrad)
+    filteredData$Breitengrad <- gsub(",", ".", filteredData$Breitengrad)
+    filteredData$Laengengrad <- as.numeric(filteredData$Laengengrad)
+    filteredData$Breitengrad <- as.numeric(filteredData$Breitengrad)
+    
+    geodaten_gemeinden <- filteredData %>%
+      #wähle die columns gemeinden, und Koordinaten einträge
+      select(Gemeinden, Laengengrad, Breitengrad) %>%
+      #entferne doppelungen
+      distinct()
+    
+    # Erstellen der Leaflet-Karte
+    leaflet(geodaten_gemeinden) %>%
+      addTiles() %>%  # Hinzufügen des Standardkarten-Layers
+      addMarkers(lng = ~Laengengrad, lat = ~Breitengrad, popup = ~Gemeinden) # Annahme: Spaltennamen sind longitude, latitude und Name
   })
   
   # Datentabelle
