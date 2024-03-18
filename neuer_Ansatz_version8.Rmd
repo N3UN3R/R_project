@@ -1,6 +1,6 @@
 ---
   title: "Case Study Group 7"
-author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis XXX, Hendrik Dybus"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis Ertekin, Hendrik Dybus"
 date: "07.02.2024"
 output: 
   html_document:
