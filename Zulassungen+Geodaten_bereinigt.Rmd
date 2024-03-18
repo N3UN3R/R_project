@@ -1,0 +1,127 @@
+---
+title: "Zulassungen+Geodaten_gereinigt"
+output: html_document
+date: "2024-03-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#Installation und Laden des Pakets "install.load", falls erforderlich. 
+# Hinweis: Das "install.load"-Paket enthält die Funktion install_load.
+
+if(!require(install.load)){
+  install.packages("install.load")
+  library(install.load)
+}
+
+# Installation und Laden der genannten Pakete, falls erforderlich   
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+```
+
+#dataframe einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+df_eingelesen <- read.csv("DATA/final_df_T02.csv")
+
+#glimpse(df_eingelesen)
+```
+
+#ZULASSUNGEN
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+#einlesen
+zulassungen_filtered <- fread("DATA/Zulassungen/Zulassungen/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )# %>% 
+zulassungen_filtered <- zulassungen_filtered %>%
+  rename(ID_Fahrzeug = IDNummer)
+
+
+#Update fehlerhafter Namen
+update_gemeinden <- function(data, old_name, new_name) {
+  # Ersetzen des alten Namens durch den neuen Namen, nur ganze Wörter
+  data$Gemeinden <- gsub(paste0("\\b", old_name, "\\b"), new_name, data$Gemeinden, perl = TRUE)
+  
+  return(data)
+}
+
+
+# Anwenden der Funktion update_gemeinden auf die Zulassungsdaten
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "AACH", "AACHEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "AACH1", "AACHEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "OBERHAUSEN1", "OBERHAUSEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "OBERHAUSEN2", "OBERHAUSEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "OBERHAUSEN3", "OBERHAUSEN")
+zulassungen_filtered <- update_gemeinden(zulassungen_filtered, "MUENSTER1", "MUENSTER")
+
+
+
+# Merge der Daten
+result <- merge(df_eingelesen, zulassungen_filtered[, c("ID_Fahrzeug", "Gemeinden")], by = "ID_Fahrzeug", all.x = TRUE)
+glimpse(result)
+```
+
+
+#GEODATEN
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+#einlesen
+geodaten <- fread("Data/Geodaten/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
+geodaten <- geodaten %>%
+  rename(Gemeinden = Gemeinde)
+
+
+#STEHT BEREITS OBEN, LÖSCHEN BEI NICHTGEBRAUCH - Update fehlerhafter Namen
+
+#update_gemeinden <- function(data, old_name, new_name) {
+#  # Ersetzen des alten Namens durch den neuen Namen, nur ganze Wörter
+#  data$Gemeinden <- gsub(paste0("\\b", old_name, "\\b"), new_name, data$Gemeinden, perl = TRUE)
+  
+#  return(data)
+#}
+
+
+# Anwenden der Funktion für die gewünschten Änderungen
+geodaten_filtered <- update_gemeinden(geodaten, "AACH", "AACHEN")
+geodaten_filtered <- update_gemeinden(geodaten, "AACH1", "AACHEN")
+geodaten_filtered <- update_gemeinden(geodaten, "OBERHAUSEN1", "OBERHAUSEN")
+geodaten_filtered <- update_gemeinden(geodaten, "OBERHAUSEN2", "OBERHAUSEN")
+geodaten_filtered <- update_gemeinden(geodaten, "OBERHAUSEN3", "OBERHAUSEN")
+geodaten_filtered <- update_gemeinden(geodaten, "MUENSTER1", "MUENSTER")
+
+#Merge
+result_final <- merge(result, geodaten_filtered[, c("Gemeinden", "Laengengrad","Breitengrad")], by = "Gemeinden", all.x = TRUE)
+glimpse(result_final)
+```
+
+
+#ALS EXTRA: Das sollte irgendwo zu sehen sein fürs Nachvollziehen des Lesers, denke ich
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+filter_gemeinden <- function(data, prefixes) {
+  filtered_data <- list()
+  
+  for (prefix in prefixes) {
+  
+    # Filtern der Gemeinden, die mit dem aktuellen Präfix beginnen
+    filtered_data[[prefix]] <- data[grepl(paste0("^", prefix), data$Gemeinden), ]
+  }
+  
+  return(filtered_data)
+}
+
+# Präfixe definieren
+prefixes <- c("AACH", "BON", "KOEL", "DORT", "BIEL", "OBERHAUS", "BOCH", "MUENSTER")
+
+# Anwendung der Funktion auf die Gemeindedaten
+geodaten_filtered <- filter_gemeinden(geodaten_filtered, prefixes)
+
+# Überprüfen der gefilterten Ergebnisse für jedes Präfix
+for (prefix in prefixes) {
+  cat("Gefilterte Ergebnisse für", prefix, ":\n")
+  print(unique(geodaten_filtered[[prefix]]$Gemeinden))
+  cat("\n")
+}
+
+```
