@@ -1,0 +1,70 @@
+---
+title: "Case_Study_Group_07"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis Ertekin, Hendrik Dybus"
+date: "2024-03-18"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+## Aufgabe
+
+### Hintergrund
+Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
+
+### Aufgabenstellung
+Ziel dieser Case Study ist die Analyse der historischen Daten der letzten drei Jahre (2014 bis 2016) und die Prognose des Bedarfs an Ersatzeinzelteilen für jede Werkstatt in den Städten Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen.
+
+## Library 
+
+Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich.     
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+if(!require(install.load)){
+  install.packages("install.load")
+  library(install.load)
+}
+
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+```
+## Importieren der Daten
+## Erstellen des finalen Datensatzes
+## Auswertung
+
+Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. 
+
+### Implementierung der Shiny-App
+
+### App Features
+
+#### Balkendiagramm 
+
+![Balkendiagramm](Balkendiagramm.jpg)
+
+Der erste Tab der Shiny-App zeigt eine Balkendiagramm, indem die kumulierten Fehler pro Monat für alle Bauteile in einer Gemeinde zu sehen sind. Die Standard-Anzeige zeigt zunächst die Fehler aller Bauteile für alle Gemeinden an. Diese ist zusätzlich auf beliebige Gemeinden anwendbar und wird über den Anzeigemodus auf der linken Seite gesteuert. Hierbei kann man über ein dropdown-Menü die gewünschte Gemeinde auswählen. Weiterhin ist es möglich die Daten für einen gezielten Monat ausgeben zu lassen.
+
+#### Ausfallverlauf
+
+![Ausfallverlauf](Ausfallverlauf.jpg)
+
+Der zweite Tab zeigt den Aufallverlauf für ein explizites Teil, welches ebenfalls über ein dropdown-Menü ausgesucht werden kann. Ebenfalls ist unter der Auswahloption des gewünschten Teils eine Prognose der Ausfälle für das erste Quartal im Jahr 2017 verzeichnet.
+
+#### Karte 
+
+![Karte](Karte.jpg)
+Der dritte Tab zeigt eine interaktive Karte. Dort sind die Städte mit den Werkstätten markiert, diese Markierungen besitzen einen Pop-up, der die empfohlende Stückzahl für das Jahr 2017 zeigt.
+
+
+#### Datentabelle
+
+![Datentabelle](Datentabelle.jpg)
+
+Der letzte Tab zeigt eine Tabelle, dieser enthält die für die Auswertung genutzten zugrundeliegende Datensatz. Der User kann hier ebenfalls mit der Search-Funktion nach Teilen oder Städten filtern.
+
+
+
+
+## Ergebnis
