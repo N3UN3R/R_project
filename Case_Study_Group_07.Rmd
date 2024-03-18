@@ -9,7 +9,7 @@ output:
     code_folding: hide
 ---
 
-## Aufgabe
+## Aufgabestellung
 
 ### Hintergrund
 Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
@@ -23,12 +23,26 @@ Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-P
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
+# Überprüfen, ob das Paket "install.load" verfügbar ist und wenn nicht, installieren
 if(!require(install.load)){
   install.packages("install.load")
   library(install.load)
 }
 
-install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
+# Mit der install_load() Funktion werden die folgenden Pakete installiert und geladen:
+install_load("dplyr",     # Datenmanipulation
+            "readr",      # Einlesen von Daten
+            "data.table", # Datenverarbeitung
+            "shiny",      # Erstellung interaktiver Webanwendungen
+            "tidyr",      # Datenbereinigung und -umstrukturierung
+            "DT",         # Interaktive Tabellen
+            "ggplot2",    # Erstellung von Grafiken
+            "lubridate",  # Arbeit mit Datum und Uhrzeit
+            "leaflet")    # Erstellung interaktiver Karten
+
+# Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
+# Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.
+
 ```
 ## Importieren der Daten
 ## Erstellen des finalen Datensatzes
@@ -37,6 +51,14 @@ install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2")
 Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. 
 
 ### Implementierung der Shiny-App
+
+Der erste Schritt bei der Implementierung der Shiny-App sind zunächst die nötigen R-Pakete zu installieren. Hier sind es 'leaflet' und 'ggplot2'. Weiterhin wurde der ebenfalls noch der Datenanalyse zugrundeliegende finale Datensatz importiert.
+
+#### User Interface
+
+
+
+![User Eingaben](User Interaktionen.jpg)
 
 ### App Features
 
