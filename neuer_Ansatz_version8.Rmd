@@ -875,14 +875,28 @@ part_T35 = merge_columns(part_T35)
 glimpse(part_T35)
 ```
 
-#36(Fehlerhaft)
+#36
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-txt <- readLines("Einzelteil/Einzelteil/Einzelteil_T36.txt")
-txt <- gsub("  ",",",txt, fixed = TRUE)
-txt <- gsub("\t","\n",txt, fixed = TRUE)
-part_T36 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
-  filter(Fehlerhaft == 1 &
-         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+# Dateipfad zur Textdatei
+dateipfad <- "DATA/Einzelteil/Einzelteil_T36.txt"
+
+# Einlesen der Textdatei als reine Zeichenfolge
+text <- read_file(dateipfad)
+
+text <- gsub("\"", "", text)
+
+rowlist <- scan(dateipfad, what = character(), sep = "")
+
+list <- rowlist[11:length(rowlist)]
+
+part_T36 <- matrix(list, nrow = length(list)/10, ncol = 10, byrow = TRUE)
+
+colnames(part_T36) <- c(rowlist[1],rowlist[2], rowlist[3], rowlist[4], rowlist[5], rowlist[6], rowlist[7], rowlist[8], rowlist[9],rowlist[10])
+
+part_T36 <- data.frame(part_T36) %>%
+  filter(part_T36[,5] == "1" &
+           ((year(as.Date(part_T36[,6])) >= 2014 & year(as.Date(part_T36[,6])) <= 2016)))
+
 glimpse(part_T36)
 ```
 #37
