@@ -199,9 +199,7 @@ fahrzeuge_ges_filtered_years <- fahrzeuge_ges_filtered_years %>%
 #glimpse(fahrzeuge_ges_filtered_years)
 
 
-
-
-fahrzeuge_ges_filtered_years_geo <-left_join(fahrzeuge_ges_filtered_years,geodaten)
+fahrzeuge_ges_filtered_years_geo <-left_join(fahrzeuge_ges_filtered_years,geodaten,by="Gemeinden")
 
 glimpse(fahrzeuge_ges_filtered_years_geo)
 
@@ -496,7 +494,7 @@ bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22
 
 
 
-#das hier kann man sehr schön als for loop gestalten, habe es aber erstmal hardgecoded
+#erstellen von dfs pro Fahrzeug mit allen Bestandteilen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
 #c11 <- select(df2, -c(ID_Motor, T5)) # Entfernt T4 und T5 aus df2
@@ -558,7 +556,7 @@ all_ids_typ22 = merge_columns(all_ids_typ22)
 glimpse(all_ids_typ22)
 ```
 
-
+#erstelle einen kompletten dataframe
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 all_df_data <- bind_rows(all_ids_typ11,all_ids_typ12,all_ids_typ21,all_ids_typ22)
 #rename columns
@@ -1036,22 +1034,26 @@ glimpse(part_T40)
 #erstellen des ersten finalen dfs für 1
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 #erstelle einen neued df mit spalten des alten
-selection_part_T01 <- select(part_T01,ID_T01,Fehlerhaft_Datum_T01, Fehlerhaft_Fahrleistung_T01)
+selection_part_T01 <- select(part_T01,ID_T01,Fehlerhaft_Datum_T01)#, Fehlerhaft_Fahrleistung_T01)
 glimpse(selection_part_T01)
 
 
+glimpse(all_df_data)
 
 #erstelle einen neued df mit spalten des alten
 #wähle spalten aus gesamt df aus
 
-all_df_selection_T01 <- select(all_df_data,ID_Fahrzeug, ID_T01)
+all_df_selection_T01 <- select(all_df_data,ID_Fahrzeug,Gemeinden, Laengengrad, Breitengrad, ID_T01)
 
 
 glimpse(all_df_selection_T01)
+
+
+
 #entferne na values aus df  für schnelleres matchen
 #hier müssen wir auf jeden fall nochmal schauen, ob zu viele werte entfernt werden
 all_df_selection_T01 <- na.omit(all_df_selection_T01)
-glimpse(all_df_selection_T01)
+#glimpse(all_df_selection_T01)
 
 #zusammenfügen der dataframes
 final_df_T01 <- inner_join(all_df_selection_T01, selection_part_T01, by = "ID_T01")
@@ -1081,7 +1083,7 @@ for(part_name in part_list) {
   
   #umbennen der spalten - neuer name
   fehlerhaft_datum_name <- paste0("Fehlerhaft_Datum_", part_name)
-  fehlerhaft_fahrleistung_name <- paste0("Fehlerhaft_Fahrleistung_", part_name)
+ # fehlerhaft_fahrleistung_name <- paste0("Fehlerhaft_Fahrleistung_", part_name)
   
   #definieren der teile ID
   id_name <- paste0("ID_", part_name)
@@ -1093,8 +1095,8 @@ for(part_name in part_list) {
   
   # Umbenennen der Spalten im part_df
   part_df <- part_df %>%
-    rename(!!fehlerhaft_datum_name := Fehlerhaft_Datum,
-           !!fehlerhaft_fahrleistung_name := Fehlerhaft_Fahrleistung)
+    rename(!!fehlerhaft_datum_name := Fehlerhaft_Datum)#,
+          # !!fehlerhaft_fahrleistung_name := Fehlerhaft_Fahrleistung)
   
  # print(df_name)
   #glimpse(part_df)
@@ -1103,7 +1105,7 @@ for(part_name in part_list) {
   # das hier basiert alles auf dem geloopten namen  
   
   # Auswahl spezifischer Spalten
-  selection_part <- select(part_df, !!id_name, !!fehlerhaft_datum_name, !!fehlerhaft_fahrleistung_name)
+  selection_part <- select(part_df, !!id_name, !!fehlerhaft_datum_name)#, !!fehlerhaft_fahrleistung_name)
   
   # Auswahl und Bereinigung im all_df_data
   all_df_selection <- select(all_df_data, ID_Fahrzeug, !!id_name) %>%
@@ -1117,13 +1119,14 @@ for(part_name in part_list) {
   
   #write.csv(final_df, "final_df", row.names = TRUE)
   
-  glimpse(final_df)
+ # glimpse(final_df)
 }
 ```
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
- write.csv(final_df, "final_df_40_180324.csv", row.names = TRUE)
+# write.csv(final_df, "Version2_final_df_40_180324.csv", row.names = TRUE)
 
+glimpse(final_df)
 
 #fahrzeuge_ges_filtered_years
 # hier ist ende des neuen Ansätzes
