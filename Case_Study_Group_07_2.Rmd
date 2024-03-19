@@ -1,0 +1,121 @@
+---
+title: "Case_Study_Group_07"
+author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis Ertekin, Hendrik Dybus"
+date: "2024-03-18"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+## Aufgabestellung
+
+### Hintergrund
+Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
+
+### Aufgabenstellung
+Ziel dieser Case Study ist die Analyse der historischen Daten der letzten drei Jahre (2014 bis 2016) und die Prognose des Bedarfs an Ersatzeinzelteilen für jede Werkstatt in den Städten Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen.
+
+## Library 
+
+### Shiny-App Library
+
+Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich. Insbesondere sind folgend diese Pakete benutzt:     
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+# Überprüfen, ob das Paket "install.load" verfügbar ist und wenn nicht, installieren
+if(!require(install.load)){
+  install.packages("install.load")
+  library(install.load)
+}
+
+# Mit der install_load() Funktion werden die folgenden Pakete installiert und geladen:
+install_load("dplyr",     # Datenmanipulation
+            "readr",      # Einlesen von Daten
+            "data.table", # Datenverarbeitung
+            "shiny",      # Erstellung interaktiver Webanwendungen
+            "tidyr",      # Datenbereinigung und -umstrukturierung
+            "DT",         # Interaktive Tabellen
+            "ggplot2",    # Erstellung von Grafiken
+            "lubridate",  # Arbeit mit Datum und Uhrzeit
+            "leaflet")    # Erstellung interaktiver Karten
+
+# Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
+# Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.
+
+```
+
+### Allgemeine Aufgaben Library
+
+Hier ist die Library zu sehen, die für die Allgemeinen Aufgaben benutzt wurde:
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+# Überprüfen, ob das Paket "install.load" verfügbar ist und wenn nicht, installieren und laden
+if(!require("install.load")){
+  install.packages("install.load")
+  library(install.load)
+}
+
+# Mit der install_load() Funktion werden die folgenden Pakete installiert und geladen:
+install_load("readr",        # Einlesen von Daten
+             "dplyr",        # Datenmanipulation
+             "ggplot2",      # Erstellung von Grafiken
+             "knitr",        # Erstellung von dynamischen Berichten
+             "tidyverse",    # Sammlung von Paketen zur Datenmanipulation und -visualisierung
+             "plotly",       # Interaktive Grafiken
+             "moments")      # Statistische Momentberechnungen
+
+# Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
+# Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.
+
+```
+
+## Importieren der Daten
+## Datenaufbereitung
+## Erstellen des finalen Datensatzes
+## Auswertung
+
+Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. Teil der Aufgabe war, das Layout der Shiny App an das Unternehmen anzupassen, was das Verwenden der Farbe Lightsteelblue beinhaltet. Diese Farbe lässt sich im Folgenden des Öfteren wiederfinden. Gleichzeitig wird das Implementieren dieser Farbe auf ein Maß begrenzt, welches die Übersichtlichkeit der App nicht negativ beeinflusst. 
+
+### Implementierung Shiny-App
+
+Der erste Schritt bei der Implementierung der Shiny-App sind zunächst die nötigen R-Pakete zu installieren. Hier sind es 'leaflet' und 'ggplot2'. Weiterhin wurde der ebenfalls noch der Datenanalyse zugrundeliegende finale Datensatz importiert.
+
+#### User Interface
+
+
+
+![User Eingaben](User Interaktionen.jpg)
+
+### App Features
+
+#### Balkendiagramm 
+
+![Balkendiagramm](Balkendiagramm.jpg)
+
+Der erste Tab der Shiny-App zeigt eine Balkendiagramm, in dem die kumulierten Fehler pro Monat für alle Bauteile in einer Gemeinde zu sehen sind. Die Standard-Anzeige zeigt zunächst die Fehler aller Bauteile für alle Gemeinden an. Links vom Balkendiagramm befindet sich ein Auswahlmenü, um die benötigte Analyse zu modifizieren. Als erstes kann man sich entweder alle Gemeinden oder eine bestimmte Gemeinde anzeigen lassen. Zudem lässt sich die gewünschte zeitliche Komponente wählen. Hierbei gibt es die Auswahl, sich alle Monate oder einen gewünschten Monat anzeigen zu lassen. Darüber hinaus lässt sich das Bauteil bestimmen, für das die Prognose erstellt werden soll In diesem Beispiel werden für Bauteil 3 acht Ausfälle in Aachen im ersten Quartal 2017 prognostiziert
+
+#### Ausfallverlauf
+
+![Ausfallverlauf](Ausfallverlauf.jpg)
+
+Der zweite Tab zeigt den Aufallverlauf für ein explizites Teil und links daneben befindet sich das Auswahlmenü, wie es auch beim Balkendiagramm vorhanden ist. Hier in dem Beispiel wird der Ausfallverlauf der Jahre 2014-2016 angezeigt. Dabei befindet sich die Zeit auf der x-Achse und die Anzahl der Ausfälle auf der y-Achse. Zu sehen ist ein zackiger Graph. Mit den schwarzen Punkten auf dem Graph werden die Monate markiert.
+In
+
+#### Karte 
+
+![Karte](Karte.jpg)
+Der dritte Tab zeigt eine interaktive Karte. Links davon ist wieder das gewohnte Auswahlmenü.
+In der Karte selbst sind die acht Gemeinden der Werkstätten mit blauen Markern hervorgehoben. In diesen Markern ist ein Pop-up integriert, welche die Prognosen für 2017 der jeweiligen Gemeinde anzeigt.
+
+
+#### Datentabelle
+
+![Datentabelle](Datentabelle.jpg)
+
+Der letzte Tab zeigt eine Tabelle. Auch hier ist auf der linken Seite wieder das Auswahlmenü zu sehen. Die Tabelle enthält den für die Auswertungl genutzten zugrundeliegenden Datensatz. Auf einer Seite der Tabele sind jeweils zehn Zeilen sichtbar, welche jeweils eine Nummerierung, den Gemeindenamen, das Jahr, den Monat und die Anzahl der Ausfälle anzeigt. Über ein Auswahlmenü am unteren Rand können die 107 Seiten angesteuert werden. Falls der User aus der Tabelle mit 1061 Einträgen, sich ein bestimmtes Ergebnis anzeigen lassen möchte, kann er das integrierte Suchfenster in der rechten oberen Ecke zum Filtern benutzen.
+
+
+## Ergebnis
