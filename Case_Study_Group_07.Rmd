@@ -397,19 +397,19 @@ bestandteile_carosserie_K7 <-fread("Data/Komponente/Komponente/Bestandteile_Komp
 
 
 
-#Vorbereitung zur Erstellung von Fahrzeugtypbezogenen Dataframes
+ Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
 
 Im nachfolgenden Codeabschnitt werden für jeden Fahrzeugtyp dataframes erstellt, die die entsprechenden Komponenten beinhalten.
 Zur Vermeidung von Fehlern und zur Erhöhung der Nachvollziehbarkeit wurde auf alternative Ansätze des nachfolgenden Codeabschnitts, beispielsweise durch Funktionen, verzichtet.
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-#basierend auf dem vorletzten schritt können nun die entsprechenden dataframes gemachted werden
-#über die zuvor identifizierten "unique keys"  wird gematched
-#man hätte es auch ohne eine aufschlüsselung in die einzelnen Fahrzeugtypen machen könnnen, allerdings sind auf diesem Weg mehr Informationen vorhanden
+# Basierend auf dem vorletzten schritt können nun die entsprechenden Dataframes gemachted werden
+# über die zuvor identifizierten "unique keys"  wird gematched.
+# Man hätte es auch ohne eine Aufschlüsselung in die einzelnen Fahrzeugtypen machen könnnen, allerdings sind auf diesem Weg mehr Informationen vorhanden.
 
 
-# matching karosserie types
+# Matching karosserie types
 bauteile_carosserie_typ11 <- inner_join(bestandteile_carosserie_K4, bestandteile_Typ11, by = c("ID_K4" = "ID_Karosserie")) %>%
-  #renaming to have a column called ID_Karosserie instead of ID_K4
+  # Umbenennen, um eine Spalte namens ID_Karosserie anstelle von ID_K4 zu haben.
   rename(ID_Karosserie = ID_K4) %>%
   # Auswählen der gewünschten Spalten
   select(ID_T30, ID_T31, ID_T32, ID_Fahrzeug, ID_Karosserie)
@@ -427,8 +427,8 @@ bauteile_carosserie_typ22 <- inner_join(bestandteile_carosserie_K7, bestandteile
   select(ID_T34, ID_T35, ID_T38,ID_T39,ID_T40, ID_Fahrzeug, ID_Karosserie)
 
 
-#matching schaltung
-#typ 11 hat "K3SG1" "K3AG1"als schaltungen
+# Matching schaltung
+# typ 11 hat "K3SG1" "K3AG1"als schaltungen
 bauteile_schaltung1_typ11 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ11, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
   rename(ID_Schaltung = ID_K3AG1) %>%
   select(ID_T21, ID_T24, ID_T25, ID_Fahrzeug, ID_Schaltung)
@@ -437,7 +437,7 @@ bauteile_schaltung2_typ11 <- inner_join(bestandteile_schaltung_K3SG1, bestandtei
   rename(ID_Schaltung = ID_K3SG1) %>%
   select(ID_T21, ID_T22, ID_T23, ID_Fahrzeug, ID_Schaltung)
 
-#typ 12 hat "K3SG1" "K3AG1"als Schaltungen
+# typ 12 hat "K3SG1" "K3AG1"als Schaltungen
 bauteile_schaltung1_typ12 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ12, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
   rename(ID_Schaltung = ID_K3AG1) %>%
   select(ID_T21, ID_T24, ID_T25, ID_Fahrzeug, ID_Schaltung)
@@ -446,7 +446,7 @@ bauteile_schaltung2_typ12 <- inner_join(bestandteile_schaltung_K3SG1, bestandtei
   rename(ID_Schaltung = ID_K3SG1) %>%
   select(ID_T21, ID_T22, ID_T23, ID_Fahrzeug, ID_Schaltung)
 
-#type 21 hat "K3AG2" "K3SG2" als SChaltungen
+# type 21 hat "K3AG2" "K3SG2" als Schaltungen
 bauteile_schaltung1_typ21 <- inner_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung")) %>%
   rename(ID_Schaltung = ID_K3AG2) %>%
   select(ID_T21, ID_T24, ID_T27, ID_Fahrzeug, ID_Schaltung)
@@ -455,7 +455,7 @@ bauteile_schaltung2_typ21 <- inner_join(bestandteile_schaltung_K3SG2, bestandtei
   rename(ID_Schaltung = ID_K3SG2) %>%
   select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
 
-#type 22 hat "K3AG2" "K3SG2 als Schaltungen
+# type 22 hat "K3AG2" "K3SG2 als Schaltungen
 bauteile_schaltung1_typ22 <- inner_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung"))%>%
   rename(ID_Schaltung = ID_K3AG2) %>%
   select(ID_T21, ID_T24, ID_T27, ID_Fahrzeug, ID_Schaltung)
@@ -465,8 +465,8 @@ bauteile_schaltung2_typ22 <- inner_join(bestandteile_schaltung_K3SG2, bestandtei
   select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
 
 
-#matching sitze
-#type 11 hat die sitze "K2LE1" "K2ST1"
+# Matching sitze
+# type 11 hat die Sitze "K2LE1" "K2ST1"
 bauteile_sitze1_typ11 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ11, by = c("ID_K2LE1" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE1) %>%
   select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
@@ -475,7 +475,7 @@ bauteile_sitze2_typ11 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ11
   rename(ID_Sitze = ID_K2ST1) %>%
   select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
 
-#type 12 hat die sitze "K2LE1" "K2ST1"
+# type 12 hat die sitze "K2LE1" "K2ST1"
 bauteile_sitze1_typ12 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ12, by = c("ID_K2LE1" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE1) %>%
   select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
@@ -484,7 +484,7 @@ bauteile_sitze2_typ12 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ12
   rename(ID_Sitze = ID_K2ST1) %>%
   select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
 
-#type 21 hat die sitze  "K2ST2" "K2LE2"
+# type 21 hat die sitze  "K2ST2" "K2LE2"
 bauteile_sitze1_typ21 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ21, by = c("ID_K2LE2" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE2) %>%
   select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
@@ -493,7 +493,7 @@ bauteile_sitze2_typ21 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ21
   rename(ID_Sitze = ID_K2ST2) %>%
   select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
 
-#type 22 hat die sitze  "K2ST2" "K2LE2"
+# type 22 hat die sitze  "K2ST2" "K2LE2"
 bauteile_sitze1_typ22 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ22, by = c("ID_K2LE2" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE2) %>%
   select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
@@ -503,8 +503,8 @@ bauteile_sitze2_typ22 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ22
   select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
 
 
-#matching motoren
-#type 11 hat die motoren "K1BE1" "K1DI1
+# Matching Motoren
+# type 11 hat die motoren "K1BE1" "K1DI1
 bauteile_motor1_typ11 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ11, by = c("ID_K1BE1" = "ID_Motor")) %>%
   rename(ID_Motor = ID_K1BE1) %>%
   select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
@@ -513,7 +513,7 @@ bauteile_motor2_typ11 <- inner_join(bestandteile_motor_K1DI1, bestandteile_Typ11
   rename(ID_Motor = ID_K1DI1) %>%
   select(ID_T1, ID_T2, ID_T5, ID_T6, ID_Fahrzeug, ID_Motor)
 
-#type 12 hat die motoren "K1BE1" "K1DI1
+# type 12 hat die Motoren "K1BE1" "K1DI1
 bauteile_motor1_typ12 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ12, by = c("ID_K1BE1" = "ID_Motor")) %>%
   rename(ID_Motor = ID_K1BE1) %>%
   select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
@@ -522,7 +522,7 @@ bauteile_motor2_typ12 <- inner_join(bestandteile_motor_K1DI1, bestandteile_Typ12
   rename(ID_Motor = ID_K1DI1) %>%
   select(ID_T1, ID_T2, ID_T5, ID_T6, ID_Fahrzeug, ID_Motor)
 
-#type 21 hat die motoren "K1BE2" "K1DI2"
+# type 21 hat die Motoren "K1BE2" "K1DI2"
 bauteile_motor1_typ21 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ21, by = c("ID_K1BE2" = "ID_Motor")) %>%
   rename(ID_Motor = ID_K1BE2) %>%
   select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
@@ -532,7 +532,7 @@ bauteile_motor2_typ21 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ12
   select(ID_T1, ID_T2, ID_T9, ID_T10, ID_Fahrzeug, ID_Motor)
 
 
-#type 22 hat die motoren "K1BE2" "K1DI2"
+# type 22 hat die Motoren "K1BE2" "K1DI2"
 bauteile_motor1_typ22 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ22, by = c("ID_K1BE2" = "ID_Motor")) %>%
   rename(ID_Motor = ID_K1BE2) %>%
   select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
@@ -544,12 +544,12 @@ bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22
 ```
 
 
-#Erstellen von dataframes für jeden Fahrzeugtyp
+# Erstellen von Dataframes für jeden Fahrzeugtyp
 
 Erstellen von Dataframes für jeden Fahrzeugtyp mit allen Einzelteil-Ids.
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
-#Erstellen von Bestandteilen dataframe Typ 11
+# Erstellen von Bestandteilen Dataframe Typ 11
 all_ids_typ11 <- full_join(bauteile_carosserie_typ11, bauteile_schaltung1_typ11, by = "ID_Fahrzeug") %>%
   full_join(bauteile_schaltung2_typ11, by = "ID_Fahrzeug") %>%
   full_join(bauteile_sitze1_typ11, by = "ID_Fahrzeug") %>%
@@ -557,13 +557,13 @@ all_ids_typ11 <- full_join(bauteile_carosserie_typ11, bauteile_schaltung1_typ11,
   full_join(bauteile_motor1_typ11,by = "ID_Fahrzeug") %>%
   full_join(bauteile_motor2_typ11,by = "ID_Fahrzeug")
 
-#entfernen von überflüssigen Spalten
+# Entfernen von überflüssigen Spalten
 all_ids_typ11 <- select(all_ids_typ11, -ID_Karosserie, -ID_Schaltung.x,-ID_Schaltung.y,-ID_Sitze.x,-ID_Sitze.y,-ID_Motor.x,-ID_Motor.y)
 # Zusammenführen der Spalten a.x und a.y in eine neue Spalte a
 all_ids_typ11 = merge_columns(all_ids_typ11)
 
 
-#Erstellen von Bestandteilen dataframe Typ 12
+# Erstellen von Bestandteilen Dataframe Typ 12
 all_ids_typ12 <- full_join(bauteile_carosserie_typ12, bauteile_schaltung1_typ12, by = "ID_Fahrzeug") %>%
   full_join(bauteile_schaltung2_typ12, by = "ID_Fahrzeug") %>%
   full_join(bauteile_sitze1_typ12, by = "ID_Fahrzeug") %>%
@@ -576,7 +576,7 @@ all_ids_typ12 <- select(all_ids_typ12, -ID_Karosserie, -ID_Schaltung.x,-ID_Schal
 all_ids_typ12 = merge_columns(all_ids_typ12)
 
 
-#Erstellen von Bestandteilen dataframe Typ 21
+# Erstellen von Bestandteilen Dataframe Typ 21
 all_ids_typ21 <- full_join(bauteile_carosserie_typ21, bauteile_schaltung1_typ21, by = "ID_Fahrzeug") %>%
   full_join(bauteile_schaltung2_typ21, by = "ID_Fahrzeug") %>%
   full_join(bauteile_sitze1_typ21, by = "ID_Fahrzeug") %>%
@@ -589,7 +589,7 @@ all_ids_typ21 <- select(all_ids_typ21, -ID_Karosserie, -ID_Schaltung.x,-ID_Schal
 all_ids_typ21 = merge_columns(all_ids_typ21)
 
 
-#Erstellen von Bestandteilen dataframe Typ 22
+# Erstellen von Bestandteilen Dataframe Typ 22
 all_ids_typ22 <- full_join(bauteile_carosserie_typ22, bauteile_schaltung1_typ22, by = "ID_Fahrzeug") %>%
   full_join(bauteile_schaltung2_typ22, by = "ID_Fahrzeug") %>%
   full_join(bauteile_sitze1_typ22, by = "ID_Fahrzeug") %>%
@@ -598,14 +598,14 @@ all_ids_typ22 <- full_join(bauteile_carosserie_typ22, bauteile_schaltung1_typ22,
   full_join(bauteile_motor2_typ22,by = "ID_Fahrzeug")
 
 all_ids_typ22 <- select(all_ids_typ22, -ID_Karosserie, -ID_Schaltung.x,-ID_Schaltung.y,-ID_Sitze.x,-ID_Sitze.y,-ID_Motor.x,-ID_Motor.y)
-# Zusammenführen der Spalten a.x und a.y in eine neue Spalte a
+# Zusammenführen der Spalten a.x und a.y in eine neue Spalte 
 all_ids_typ22 = merge_columns(all_ids_typ22)
 
 ```
 
 
 
-#Erstellen eines des Teile Dataframes
+# Erstellen eines Teile Dataframes
 
 Erstellung eines zusammengeführten Dataframes, der alle zuvor fahrzeugspezifischen Dataframes im vorherigen Schritt zu einem Dataframe zusammenführt.
 Das Ergebnis dieses Codeabschnitts ist der Dataframe "all_df_data".
@@ -647,7 +647,7 @@ part_T01 <- fread(text = txt, sep = ",", data.table = FALSE, drop=c(1,2)) %>%
           (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
-#anpassen von Verdoppelungen
+# Anpassen von Verdoppelungen
 part_T01 = merge_columns(part_T01)
 names(part_T01)[names(part_T01) == "Fehlerhaft_Datum"] <- "Fehlerhaft_Datum_T01"
 names(part_T01)[names(part_T01) == "Fehlerhaft_Fahrleistung"] <- "Fehlerhaft_Fahrleistung_T01"
@@ -670,14 +670,14 @@ part_T02 <- fread(text = txt, sep = ",", data.table = FALSE, drop=c(1,2)) %>%
           (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
 
 
-#anpassen von Verdoppelungen
+# Anpassen von Verdoppelungen
 part_T02 = merge_columns(part_T02)
 #glimpse(part_T02)
 
 ```
 
 
-#Einzelteil T03 einlesen
+#3 Einzelteil T03 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T03.txt")
 txt <- gsub("|",",",txt, fixed = TRUE)
@@ -689,7 +689,7 @@ part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 
 ```
 
-
+#4 Einzelteil T04 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
   part_T04 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T04.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -699,7 +699,7 @@ part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 ```
 
 
-#Einzelteil T05 einlesen
+#5 Einzelteil T05 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T05 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE, drop= c(1,2)) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -889,7 +889,7 @@ part_T20 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2,10)) %
 ```
 
 
-21 Einzelteil T21 einlesen
+#21 Einzelteil T21 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T21 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE,drop = c(1,2,10)) %>% 
   filter(Fehlerhaft == 1 &
@@ -946,7 +946,7 @@ part_T24 = merge_columns(part_T24)
 ```
 
 
-25 Einzelteil T25 einlesen
+#25 Einzelteil T25 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T25 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T25.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -1120,7 +1120,6 @@ part_T40 = merge_columns(part_T40)
 
 
 
-
 ## Erstellen des finalen Datensates
 
 
@@ -1276,7 +1275,7 @@ Hier in dem Beispiel wird der Ausfallverlauf der Jahre 2014-2016 angezeigt. Dabe
 
 ####Prognose
 
-Darüber hinaus wird beim Auswählen eines bestimmten Bauteils, eine Prognose im dynamischen Feld angezeigt. Dieser Wert verändert sich jeweils für die ausgwählte Gemeinde, lässt sich jeodch auch für alle Gemeinden ausgeben lassen.
+Darüber hinaus wird beim Auswählen eines bestimmten Bauteils, eine Prognose im dynamischen Feld angezeigt. Dieser Wert verändert sich jeweils für die ausgwählte Gemeinde, lässt sich jeodch auch für alle Gemeinden ausgeben lassen. Es wurde sich absichtlich dagegen entschieden über den gesammten Zeitraum 2014-2016 einen Schnitt zu bilden da so die Jahreszeitlichen Schwankungen der benötigten Einzelteile nicht einbezogen werden würden. Ich denke hier besonders an Auspuff-Wannen die durchrosten im Winter sowie Scheibenwischer deren Ersatz erst bei dem schlechten Wetter im ersten Quartal auffällt.
 In diesem Beispiel werden für Bauteil 3 acht Ausfälle in Aachen im ersten Quartal 2017 prognostiziert
 
 #### Karte 
