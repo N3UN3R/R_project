@@ -25,22 +25,22 @@ Dabei soll zu Analyse der Problemstellung der Case Study eine interaktive Applik
 
 Nachdem die relevanten Daten importiert und gemäß den Prinzipien von 'tidy data' aufbereitet sowie in einen einzigen finalen Datensatz zusammengeführt wurden, sollte eine App erstellt werden, die die folgenden Ergebnisse analysiert und visualisiert:
 
-*Ein Balkendiagramm, in dem für jeden Monat die Anzahl der Ausfälle für jedes Teil gestapelt wird. Es soll dabei nach den oben genannten Orten ausgewählt und gefiltert werden.
+- Ein Balkendiagramm, in dem für jeden Monat die Anzahl der Ausfälle für jedes Teil gestapelt wird. Es soll dabei nach den oben genannten Orten ausgewählt und gefiltert werden.
 
-*Der Ausfallverlauf eines auswählbaren Teils. Zudem eine Prognose für das erste Quartal 2017 für das ausgewählte Teil. Es ist hier sowohl der Gesamtausfall, als auch der Ausfall je genannter Stadt auszugeben in der Visualisierung.
+- Der Ausfallverlauf eines auswählbaren Teils. Zudem eine Prognose für das erste Quartal 2017 für das ausgewählte Teil. Es ist hier sowohl der Gesamtausfall, als auch der Ausfall je genannter Stadt auszugeben in der Visualisierung.
 
-*Die Intergartion einer interaktiven Karten, auf der alle Orte makiert sind. Es sollen außerdem, die aus der Prognose hervorgehenden empfohlenden Stückzahlen für ein Teil, als Pop-Ups bei den Orten ergänzt werden.
+- Die Intergartion einer interaktiven Karten, auf der alle Orte makiert sind. Es sollen außerdem, die aus der Prognose hervorgehenden empfohlenden Stückzahlen für ein Teil, als Pop-Ups bei den Orten ergänzt werden.
 
-*Der finale Datensatz soll mit allen notwendigen Eigenschaften als Beweis in Tabellenform abschließend angezeigt werden.
+- Der finale Datensatz soll mit allen notwendigen Eigenschaften als Beweis in Tabellenform abschließend angezeigt werden.
 
 
-## Datenanalyse
+### Datenanalyse
 
 Nachfolgend wird die Analyse und Aufarbeitung der Daten erläutert. Hierzu wird zunächst anhand eines Schaubilds erläutert, wie die Datensätze zusammenhängen.
 Die Auswertung der Datensätze hat das Ziel einen finalem dataframe bzw. eine finale .csv Datei zu erstellen, welcher als Ausgangsbasis für die spätere Darstellung in der Shiny-App dient.
 
 
-## Library 
+### Library 
 Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich. Insbesondere sind folgend diese Pakete benutzt worden:
 
 
@@ -65,7 +65,7 @@ install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2",
 Aus Gründen der Übersichtlichkeit wurden die Schritte des Datenimports und der Datenaufbereitung bewusst so zusammengefasst, dass Schritte gut nachvollziehbar sind und ein möglichst speicherplatzoptimiertes Skript entsteht.
 
 
-# Hilfsfunktionen zur Datenbereinigung
+### Hilfsfunktionen zur Datenbereinigung
 Die Hilfsfunktionen dienen immer wieder zu Datenaufarbeitungsschritten und werden deshalb am Anfang des Skriptes definiert.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -117,7 +117,7 @@ merge_columns <- function(df) {
 ```
 
 
-# Einlesen der Fahrzeugzulassungen
+### Einlesen der Fahrzeugzulassungen
 
 Lese "Zulassungen_alle_Fahrzeuge.csv" als erste Datei ein.
 Aufgrund von schlechter Datenqualität werden fehlerhafte Daten durch Anwendung der oben erzeugten Hilfsfunktionen eresetzt und korrigiert.
@@ -174,7 +174,7 @@ glimpse(zulassungen_filtered)
 ```
 
 
-# Einlesen der Fahrzeugdaten für jeden OEM Typ
+### Einlesen der Fahrzeugdaten für jeden OEM Typ
 
 Nachfolgend werden die entsprechenden .csv Dateien eingelesen.
 Diese enthalten für jeden Fahrzeugtyp die verbauten Komponenten.
@@ -215,7 +215,7 @@ glimpse(oem_integrated)
 
 
 
-# Einlesen der Geodaten 
+### Einlesen der Geodaten 
 
 Nachfolgend werden die für diese Analyse relevanten Geodaten aus der Datei "Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv" eingelesen.
 Der dadurch entstandene Dataframe "geodaten" wird anschließend mit der dem bereits zuvor erstellten Dataframe oem_integrated zusammengefügt.
@@ -244,7 +244,7 @@ glimpse(oem_integrated_geo)
 
 
 
-# Einlesen von Fahrzeugbestandteilen
+### Einlesen von Fahrzeugbestandteilen
 
 Im nächsten Schritt werden die Fahrzeugbestandteile eingelesen.
 Die Bestandteile widerum enthalten Informationen zu den Komponenten des Fahrzeugs.
@@ -336,7 +336,7 @@ motor_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Motor, "-"), `[`
 
 
 
-# Einlesen der Fahrzeugkomponenten
+### Einlesen der Fahrzeugkomponenten
 
 Nachfolgend werden die .csv Dateien der Komponenten eingelesen.
 Zur Besseren Nachvollziehbarkeit wurde auf eine Implementierung mittels for-loop verzichtet.
@@ -397,7 +397,7 @@ bestandteile_carosserie_K7 <-fread("Data/Komponente/Komponente/Bestandteile_Komp
 
 
 
-# Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
+### Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
 
 Im nachfolgenden Codeabschnitt werden für jeden Fahrzeugtyp Dataframes erstellt, die die entsprechenden Komponenten beinhalten.
 Zur Vermeidung von Fehlern und zur Erhöhung der Nachvollziehbarkeit wurde auf alternative Ansätze des nachfolgenden Codeabschnitts, beispielsweise durch Funktionen, verzichtet.
@@ -544,7 +544,7 @@ bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22
 ```
 
 
-# Erstellen von Dataframes für jeden Fahrzeugtyp
+### Erstellen von Dataframes für jeden Fahrzeugtyp
 
 Erstellen von Dataframes für jeden Fahrzeugtyp mit allen Einzelteil-Ids.
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -605,7 +605,7 @@ all_ids_typ22 = merge_columns(all_ids_typ22)
 
 
 
-# Erstellen eines Teile-Dataframes
+### Erstellen eines Teile-Dataframes
 
 Erstellung eines zusammengeführten Dataframes, der alle zuvor fahrzeugspezifischen Dataframes im vorherigen Schritt zu einem Dataframe zusammenführt.
 Das Ergebnis dieses Codeabschnitts ist der Dataframe "all_df_data".
@@ -626,7 +626,7 @@ glimpse(all_df_data)
 
 
 
-## Einlesen der Einzelteil-Dateien
+### Einlesen der Einzelteil-Dateien
 
 Die nachfolgenden Abschnitte beinhalten das Einlesen der Einzelteil-Dateien.
 Aufgrund schlechter Datenqualität und teilweise höherer Komplexität beim Einlesen der Dateien wurde nachfolgend auf for-schleifen oder Funktionen verzichtet, um die Nachvollziehbarkeit zu erhöhen und die Fehleranfälligkeit zu reduzieren.
@@ -769,14 +769,6 @@ part_T10 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE
 #glimpse(part_T10)
 ```
 
-
-#10 Einzelteil T10 einlesen
-```{r, message=FALSE, warning = FALSE, cache = TRUE}
-part_T10 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
-  filter(Fehlerhaft == 1 &
-         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
-#glimpse(part_T10)
-```
 
 
 #11 Einzelteil T11 einlesen
@@ -1123,7 +1115,7 @@ part_T40 = merge_columns(part_T40)
 ## Erstellen des finalen Datensates
 
 
-# Erstellen des ersten finalen dataframes für T01
+### Erstellen des ersten finalen dataframes für T01
 
 Die Erstellung des finalen Datensatzes ist ein iterativer Prozess.
 Hierfür wird in einem ersten Schritt zunächst der finale Datensatz für T01 erstellt.
@@ -1149,7 +1141,7 @@ final_df_T01 <- inner_join(all_df_selection_T01, selection_part_T01, by = "ID_T0
 #glimpse(final_df_T01)
 ```
 
-#Erstellen des finalen Dataframes
+### Erstellen des finalen Dataframes
 
 Basierend auf dem Ausgangsdataframe (final_df_T01) wird nun anschließend mittels einer for-Schleife für jedes Einzelteil der entsprechende Dataframe erstellt und anschließend mittels full_join an den bestehenden Dataframe angefügt.
 
@@ -1204,7 +1196,7 @@ for(part_name in part_list) {
 ```
 
 
-# Erstellen des finalen Datensatzes
+### Finaler Datensatz
 
 Im nachfolgenden Abschnitt wird der finale Datensatz zunächst erstellt und anschließend als .csv Datei exportiert.
 Dazu werden aus dem erstellten finalen Dataframe nochmal über einen inner_join nur die für diese Case study relevanten Gemeinden gefiltert mittels oem_integrated_geo.
@@ -1221,7 +1213,7 @@ write.csv(finaler_dataframe, "finaler_Datensatz_CaseStudy7.csv", row.names = TRU
 
 Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. Die genauen Aufgaben und Funktionen der App sind in der Aufgabenstellung weiter oben in der Dokumentation beschrieben.
 
-### Implementierung Shiny-App
+#### Implementierung Shiny-App
 
 Der erste Schritt bei der Implementierung der Shiny-App sind zunächst die nötigen R-Pakete zu installieren. Für die Dashboard-Elemente wurden folgende Pakete, wenn nötig installiert: "shiny", "shinythemes", "ggplot2", "ggmap", "shinydashboard". 
 Es wurde zudem noch folgende Libarys eingebunden für die Applikation:
@@ -1237,13 +1229,13 @@ Zunächst wurde die Benutzeroberfläche(UI) implementiert. Hier wird die Schnitt
 
 Der Benutzer kann mit der Seitenleiste der Applikation interagieren und sich dabei die visualierten Ergebnisse für eine ausgewählte Gemeinde, für einen ausgwählten Monat und ein ausgewähltes Teil anzeigen lassen. Gesamtergbenisse für alle Gemeinden und alle Monate sind ebenso möglich. Es sind so diese Funktionen für den Benutzer möglich:
 
-*Das Auswählen aller oder einer einzelen Gemeinde. Es werde hier die acht Orte, in den die Autowerkstätte Betrieben werden als Auswahlmöglichkeiten angezeigt. Dabei wird die RadioButtons()-Funktion verwendet um eine Gruppe an Optionsfeldern, in diesem Fall die Gemeinden in der Shiny-App anzugeben.
+- Das Auswählen aller oder einer einzelen Gemeinde. Es werde hier die acht Orte, in den die Autowerkstätte Betrieben werden als Auswahlmöglichkeiten angezeigt. Dabei wird die RadioButtons()-Funktion verwendet um eine Gruppe an Optionsfeldern, in diesem Fall die Gemeinden in der Shiny-App anzugeben.
 
-*Das Auswählen aller oder eines Monats. Hierbei sind die Jahre 2014-2016 berücksichtigt. Es wurde erneut die RadioButtons()-Funktion verwendet.
+- Das Auswählen aller oder eines Monats. Hierbei sind die Jahre 2014-2016 berücksichtigt. Es wurde erneut die RadioButtons()-Funktion verwendet.
 
-*Das Auswählen eines Einzelteils von T01 bis T40, wobei 28,29 nicht im Datensatz enthalten sind. Mit uiOutput wird hier die Auwahl eines Bauteils implementiert.
+- Das Auswählen eines Einzelteils von T01 bis T40, wobei 28,29 nicht im Datensatz enthalten sind. Mit uiOutput wird hier die Auwahl eines Bauteils implementiert.
 
-*Die Anzeige der Prognose für das erste Quartal 2017 des vorher ausgewählten Bauteil. Mit uiOutput wird hier die dynamische Box implementiert.
+- Die Anzeige der Prognose für das erste Quartal 2017 des vorher ausgewählten Bauteil. Mit uiOutput wird hier die dynamische Box implementiert.
 
 
 ![User Eingaben](User Interaktionen.jpg)
@@ -1255,9 +1247,9 @@ NOCH ZU TUN: Screenshot von den 4 Registerkarten
 
 Mit den beschriebenen Funktionen lassen sich die Ergebnisse in der Shiny-App visualisieren und entsprchend der Aufgabenstellung von oben anpassen.
 
-### Funktion der Shiny-App
+#### Funktion der Shiny-App
 
-Im Server sind die Ausgaben und Ergebnisse, die in den Anzeigen der App zu sehen sind, erstellt worden. Dabei wurden sogenannte reative Funktionen genutzt. Diese ändern die Ausgabe ihres Ergebnisses und reagieren auf die Eingabe des Benutzers.
+Im Server sind die Ausgaben und Ergebnisse, die in den Anzeigen der App zu sehen sind, erstellt worden. Dabei wurden sogenannte reaktive Funktionen genutzt. Diese ändern die Ausgabe ihres Ergebnisses und reagieren auf die Eingabe des Benutzers.
 
 #### Balkendiagramm 
 
@@ -1282,7 +1274,7 @@ In diesem Beispiel werden für Bauteil 3 acht Ausfälle in Aachen im ersten Quar
 
 ![Karte](Karte.jpg)
 Der dritte Tab zeigt eine interaktive Karte. Das Auwahl für den Benutzer bleibt unverändert. Alleine das Auswählen eines betstimmten Bauteils hat jedoch Auswirkungen auf die Karte und ihrer Anzeige.
-In der Karte selbst sind dabeei die acht Gemeinden der Werkstätten mit blauen Markern hervorgehoben. An diesen Markern ist ein Pop-up integriert, welche die Prognosen für 2017 der jeweiligen Gemeinde anzeigt. Dabei bezieht sich diese Prognose, wie beschrieben nur auf das ausgwählte Einzelteil.
+In der Karte selbst sind dabei die acht Gemeinden der Werkstätten mit blauen Markern hervorgehoben. An diesen Markern ist ein Pop-up integriert, welche die Prognosen für 2017 der jeweiligen Gemeinde anzeigt. Dabei bezieht sich diese Prognose, wie beschrieben nur auf das ausgwählte Einzelteil.
 
 #### Datentabelle
 
