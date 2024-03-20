@@ -4,11 +4,16 @@
 # die Erstellung von Diagrammen (ggplot2), 
 # den Zugriff auf Karten (ggmap), 
 # und das Erstellen von Dashboard-Elementen (shinydashboard).
-if (!require("shiny")) install.packages("shiny")
-if (!require("shinythemes")) install.packages("shinythemes")
-if (!require("ggplot2")) install.packages("ggplot2")
-if (!requireNamespace("ggmap", quietly = TRUE)) install.packages("ggmap")
-if (!require("shinydashboard")) install.packages("shinydashboard")
+
+
+# Unterdrückt Warnungen beim Laden der Pakete
+suppressWarnings({
+  if (!require("shiny")) install.packages("shiny")
+  if (!require("shinythemes")) install.packages("shinythemes")
+  if (!require("ggplot2")) install.packages("ggplot2")
+  if (!requireNamespace("ggmap", quietly = TRUE)) install.packages("ggmap")
+  if (!require("shinydashboard")) install.packages("shinydashboard")
+})
 
 # Einbindung der Pakete in die R-Sitzung.
 library(shinydashboard)
@@ -21,14 +26,16 @@ library(lubridate)
 library(readr)
 library(ggmap)
 
+
 # Festlegen eines Pfades, unter dem Ressourcen wie Bilder gespeichert sind.
 # Dies ermöglicht es uns, Bilder in der App leichter zu referenzieren.
 
 #shiny::addResourcePath("res", "C:/Users/Timon/OneDrive/Dokumente/R_project")
 
-
 # Laden und Vorbereiten der Daten für die Anwendung.
-df <- read_csv("hendrik_timon_Lueko_final_ihr_bitches.csv")
+suppressMessages({
+  df <- read_csv("hendrik_timon_Lueko_final_ihr_bitches.csv")
+})
 
 # Auswahl relevanter Spalten für die Visualisierung und Entfernung von Duplikaten,
 # um die Effizienz und Genauigkeit der Datenverarbeitung zu erhöhen.
@@ -142,9 +149,7 @@ server <- function(input, output, session) {
         
         # Speichert das Ergebnis in der Liste unter dem dynamisch generierten Spaltennamen
         monatliche_zaehlungen_liste[[spaltenname]] <- monatliche_zaehlung
-      } else {
-        # Gibt eine Warnung aus, falls die Spalte nicht im DataFrame existiert
-        message(spaltenname, " existiert nicht im DataFrame.")
+
       }
     }
     # Kombiniert die monatlichen Zählungen aus allen Listen-Elementen in einen einzigen DataFrame
@@ -295,7 +300,9 @@ server <- function(input, output, session) {
     #daten <- filteredDataByMonth()
     
     # Erstellen des Balkendiagramms basierend auf den gefilterten Daten
-    ggplot(filteredData2(), aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
+    daten <- filteredData2()
+    daten <-daten[complete.cases(daten), ]
+    ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_fill_viridis_d() +
       labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil") +
@@ -320,6 +327,7 @@ server <- function(input, output, session) {
     # Filtern der Daten für das erste Quartal von 2016
     first_quarter_2016 <- filteredData() %>%
       filter(MonatJahr >= as.Date("2016-01-01") & MonatJahr <= as.Date("2016-03-31"))
+
     
     # Aggregieren der Daten nach Bauteil, um den Durchschnitt für das ausgewählte Bauteil im ersten Quartal zu erhalten
     first_quarter_aggregated <- bind_rows(first_quarter_2014, first_quarter_2015, first_quarter_2016) %>%
@@ -402,6 +410,8 @@ server <- function(input, output, session) {
     y_min <- min(daten$Anzahl, na.rm = TRUE) * 0.6 # 10% Puffer unten
     
     # Erstellen des Ausfallverlaufsplots
+    daten <- daten[complete.cases(daten), ]
+
     plot <- ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_line() +
       geom_point() +
@@ -431,7 +441,10 @@ server <- function(input, output, session) {
   # Datentabelle
   output$dataTable <- renderDT({
     # Auswahl der gewünschten Spalten
-    filtered_data_selected <- filteredData4() %>%
+    daten <- filteredData4()
+    daten <- daten[complete.cases(daten), ]
+    
+    filtered_data_selected <- daten %>%
       select(Bauteil, Gemeinden, Jahr, Monat, Anzahl)
     
     # Anzeigen der gefilterten und ausgewählten Daten als Datentabelle
