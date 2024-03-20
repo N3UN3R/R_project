@@ -1,7 +1,7 @@
 ---
 title: "Case_Study_Group_07"
 author: "Timon Zimmermann, Lüko Neuner-Jehle, Johannes Florstedt, Enis Ertekin, Hendrik Dybus"
-date: "2024-03-18"
+date: "2024-03-21"
 output: 
   html_document:
     toc: true
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-##Aufgabe
+## Aufgabe
 ### Hintergrund
 Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
 
@@ -45,7 +45,7 @@ Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-P
 
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-#Installation und Laden des Pakets "install.load", falls erforderlich. 
+# Installation und Laden des Pakets "install.load", falls erforderlich. 
 # Hinweis: Das "install.load"-Paket enthält die Funktion install_load.
 
 if(!require(install.load)){
@@ -62,10 +62,10 @@ install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2",
 
 ## Datenimport und Datenbereinigung
 
-Aus Gründen der Übersichtlichkeit wurden die Schritte dews Datenimports und der Datenaufbereitung bewusst so zusammengefasst, dass Schritte gut nachvollziehbar sind und ein möglichst speicherplatzoptimiertes Skript entsteht.
+Aus Gründen der Übersichtlichkeit wurden die Schritte des Datenimports und der Datenaufbereitung bewusst so zusammengefasst, dass Schritte gut nachvollziehbar sind und ein möglichst speicherplatzoptimiertes Skript entsteht.
 
 
-#Hilfsfunktionen zur Datenbereinigung
+# Hilfsfunktionen zur Datenbereinigung
 Die Hilfsfunktionen dienen immer wieder zu Datenaufarbeitungsschritten und werden deshalb am Anfang des Skriptes definiert.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -91,7 +91,7 @@ update_gemeinden_fehlerhaft <- function(data, old_name, new_name) {
   return(data)
 }
 
-#hilfsfunktion zum Zusammenfügen von Spalten
+# Hilfsfunktion zum Zusammenfügen von Spalten
 merge_columns <- function(df) {
   # Finden aller Spalten, die auf .x enden
   cols_x <- names(df)[grepl("\\.x$", names(df))]
@@ -122,13 +122,13 @@ merge_columns <- function(df) {
 Lese "Zulassungen_alle_Fahrzeuge.csv" als erste Datei ein.
 Aufgrund von schlechter Datenqualität werden fehlerhafte Daten durch Anwendung der oben erzeugten Hilfsfunktionen eresetzt und korrigiert.
 Der Ende dieses Schrittes führt zum Dataframe "zulassungen_filtered".
-Dieser enthält Die Informationen zur FahrzeugID, den Gemeinden und das Zulassungsdatum (dieses wird zwar nicht mehr benötigt, wurde aufgrund universeller Anwendbarkeit jedoch im Dataframe behalten).
+Dieser enthält die Informationen zur FahrzeugID, den Gemeinden und das Zulassungsdatum (dieses wird zwar nicht mehr benötigt, wurde aufgrund universeller Anwendbarkeit jedoch im Dataframe behalten).
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-#einlesen der Daten
+# Einlesen der Daten
 zulassungen <- fread("Data/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
 
-#Analyse der Zulassungsgemeinden
+# Analyse der Zulassungsgemeinden
 einzigartige_werte <- zulassungen %>%
   group_by(Gemeinden) %>%
   summarise(Anzahl = n()) %>%
@@ -136,7 +136,7 @@ einzigartige_werte <- zulassungen %>%
 
 #glimpse(einzigartige_werte)
 
-#Bei der Analyse der Orte fällt auf, dass teilweise Orte falsch geschrieben sind, nachfolgend werden die falschen Gemeinden analysiert und erneuert
+# Bei der Analyse der Orte fällt auf, dass teilweise Orte falsch geschrieben sind, nachfolgend werden die falschen Gemeinden analysiert und erneuert.
 
 # Präfixe definieren
 prefixes <- c("AACH", "BON", "KOEL", "DORT", "BIEL", "OBERHAUS", "BOCH", "MUENSTER")
@@ -159,7 +159,7 @@ zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "OBERHAUSEN2", "OBERHAUS
 zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "OBERHAUSEN3", "OBERHAUSEN")
 zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "MUENSTER1", "MUENSTER")
 
-#Benenne IdNummern in ID_Fahrzeug um - dieser Schritt ist erforderlich um einheitliche Ids zu haben
+# Benenne IdNummern in ID_Fahrzeug um - dieser Schritt ist erforderlich um einheitliche Ids zu haben.
 zulassungen <- zulassungen %>%
   rename(ID_Fahrzeug = IDNummer)
 
@@ -167,7 +167,7 @@ zulassungen <- zulassungen %>%
 
 zulassungen_filtered <- zulassungen %>% 
   filter(tolower(Gemeinden) %in% tolower(c("Koeln", "Dortmund", "Bielefeld", "Bonn", "Oberhausen", "Bochum", "Muenster", "Aachen")))
-  #tolower ermöglicht, dass die string sowohl ins capslock, als auch klein oder mischung gefiltert werden
+  # tolower ermöglicht, dass die Strings sowohl ins Capslock, als auch klein oder mischung gefiltert werden
 
 glimpse(zulassungen_filtered)
 
@@ -200,7 +200,7 @@ Bei der Auswertung von Ergebnissen zeigte sich jedoch, dass teilweise Fahrzeugte
 Da eine Filterung hier das Skript insgesamt beschleunigen würde, ist der Code weiterhin enthalten. Es sei jedoch ausdrücklich darauf hingewiesen, dass eine Filterung nach Fehlerhaft und/oder Jahren hier erst sinnvoll ist, wenn bei der Datenpflege entsprechende Maßnahmen ergriffen werden.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-#zusammenfügen von Fahrzeugdaten
+# Zusammenfügen von Fahrzeugdaten
 oem_integrated <- left_join(zulassungen_filtered,Fahrzeug_Typ11, by = "ID_Fahrzeug")
 oem_integrated <- left_join(oem_integrated,Fahrzeug_Typ12, by = "ID_Fahrzeug")
 oem_integrated <- merge_columns(oem_integrated)
@@ -230,11 +230,11 @@ geodaten <- geodaten %>%
   rename(Gemeinden = Gemeinde) %>%
    select(-V1,-X,-Postleitzahl)
 
-#entferne nicht relevanten Zeilen
+# Entferne nicht relevanten Zeilen
 oem_integrated <- oem_integrated %>% 
   select(-V1,-Zulassung,-Produktionsdatum,-Werksnummer,-Fehlerhaft,-Fehlerhaft_Datum)
 
-#füge die Längen- und Breitengrade hinzu
+# Füge die Längen- und Breitengrade hinzu
 oem_integrated_geo <-left_join(oem_integrated,geodaten,by="Gemeinden")
 
 glimpse(oem_integrated_geo)
@@ -244,33 +244,33 @@ glimpse(oem_integrated_geo)
 
 
 
-#Einlesen von Fahrzeugbestandteilen
+# Einlesen von Fahrzeugbestandteilen
 
 Im nächsten Schritt werden die Fahrzeugbestandteile eingelesen.
 Die Bestandteile widerum enthalten Informationen zu den Komponenten des Fahrzeugs.
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
-#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 11
+# Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 11
 bestandteile_Typ11 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", header = TRUE, data.table = FALSE)
-#entferne die index spalte
+# Entferne die Index-Spalte
 bestandteile_Typ11 <- bestandteile_Typ11 %>% 
   select(-V1)
 
-#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 12
+# Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 12
 bestandteile_Typ12 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", header = TRUE, data.table = FALSE)
-#entferne die index spalte
+# Entferne die Index-Spalte
 bestandteile_Typ12 <- bestandteile_Typ12 %>%
   select(-V1)
 
-#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 21
+# Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 21
 bestandteile_Typ21 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv", header = TRUE, data.table = FALSE)
-#entferne die index spalte
+# Entferne die Index-Spalte
 bestandteile_Typ21 <- bestandteile_Typ21 %>%
   select(-V1)
 
-#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 22
+# Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 22
 bestandteile_Typ22 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv", header = TRUE, data.table = FALSE)
-#entferne die index spalte
+# Entferne die Index-Spalte
 bestandteile_Typ22 <- bestandteile_Typ22 %>%
   select(-X1)
 ```
@@ -278,56 +278,56 @@ bestandteile_Typ22 <- bestandteile_Typ22 %>%
 
 
 
-# Aalyse der pro Fahrzeugtyp verbauten Komponenten
+# Analyse der pro Fahrzeugtyp verbauten Komponenten
 
-Der nachfolgenbde Code diente lediglich dazu herauszufinden, welche "keys" bei den jeweiligen Fahrzeugen enthalten sind.
+Der nachfolgenbde Code diente lediglich dazu herauszufinden, welche "Keys" bei den jeweiligen Fahrzeugen enthalten sind.
 Für die Analyse ist der Codeabschnitt nicht erforderlich, jedoch aus Gründen der Vollständigkeit enthalten.
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-#die Ids selbst sind in der jeweiligen column
+# Die Ids selbst sind in der jeweiligen Spalte
 carosserie_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Karosserie, "-"), `[`, 1))
 schaltung_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Schaltung, "-"), `[`, 1))
 sitze_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Sitze, "-"), `[`, 1))
 motor_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Motor, "-"), `[`, 1))
 
-#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+# Hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
 #print(carosserie_Ids_11_key)
 #print(schaltung_Ids_11_key)
 #print(sitze_Ids_11_key)
 #print(motor_Ids_11_key)
 
-#die Ids selbst sind in der jeweiligen column
+# Die Ids selbst sind in der jeweiligen Spalte
 carosserie_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Karosserie, "-"), `[`, 1))
 schaltung_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Schaltung, "-"), `[`, 1))
 sitze_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Sitze, "-"), `[`, 1))
 motor_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Motor, "-"), `[`, 1))
 
-#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+# Hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
 #print(carosserie_Ids_12_key)
 #print(schaltung_Ids_12_key)
 #print(sitze_Ids_12_key)
 #print(motor_Ids_12_key)
 
 
-#die Ids selbst sind in der jeweiligen column
+# Die Ids selbst sind in der jeweiligen Spalte
 carosserie_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Karosserie, "-"), `[`, 1))
 schaltung_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Schaltung, "-"), `[`, 1))
 sitze_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Sitze, "-"), `[`, 1))
 motor_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Motor, "-"), `[`, 1))
 
-#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+# Hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
 #print(carosserie_Ids_21_key)
 #print(schaltung_Ids_21_key)
 #print(sitze_Ids_21_key)
 #print(motor_Ids_21_key)
 
 
-#die Ids selbst sind in der jeweiligen column
+# Die Ids selbst sind in der jeweiligen Spalte
 carosserie_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Karosserie, "-"), `[`, 1))
 schaltung_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Schaltung, "-"), `[`, 1))
 sitze_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Sitze, "-"), `[`, 1))
 motor_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Motor, "-"), `[`, 1))
 
-#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+# Hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
 #print(carosserie_Ids_22_key)
 #print(schaltung_Ids_22_key)
 #print(sitze_Ids_22_key)
@@ -336,7 +336,7 @@ motor_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Motor, "-"), `[`
 
 
 
-#Einlesen der Fahrzeugkomponenten
+# Einlesen der Fahrzeugkomponenten
 
 Nachfolgend werden die .csv Dateien der Komponenten eingelesen.
 Zur Besseren Nachvollziehbarkeit wurde auf eine Implementierung mittels for-loop verzichtet.
@@ -344,52 +344,52 @@ Das Ergebnis des Codeabschnits ist ein Dataframe für jede Fahrzeugkomponente.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_motor_K1BE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE1.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_motor_K1BE2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE2.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_motor_K1DI1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1DI1.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_motor_K1DI2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1DI2.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_sitze_K2LE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2LE1.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_sitze_K2LE2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2LE2.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_sitze_K2ST1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2ST1.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_sitze_K2ST2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2ST2.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_schaltung_K3AG1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3AG1.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_schaltung_K3AG2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3AG2.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_schaltung_K3SG1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3SG1.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_schaltung_K3SG2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3SG2.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_carosserie_K4 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K4.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_carosserie_K5 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K5.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_carosserie_K6 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K6.csv", header = TRUE, data.table = FALSE)
 
-#Einlesen der Komponente
+# Einlesen der Komponente
 bestandteile_carosserie_K7 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K7.csv", header = TRUE, data.table = FALSE)
 ```
 
@@ -397,17 +397,17 @@ bestandteile_carosserie_K7 <-fread("Data/Komponente/Komponente/Bestandteile_Komp
 
 
 
- Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
+# Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
 
-Im nachfolgenden Codeabschnitt werden für jeden Fahrzeugtyp dataframes erstellt, die die entsprechenden Komponenten beinhalten.
+Im nachfolgenden Codeabschnitt werden für jeden Fahrzeugtyp Dataframes erstellt, die die entsprechenden Komponenten beinhalten.
 Zur Vermeidung von Fehlern und zur Erhöhung der Nachvollziehbarkeit wurde auf alternative Ansätze des nachfolgenden Codeabschnitts, beispielsweise durch Funktionen, verzichtet.
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-# Basierend auf dem vorletzten schritt können nun die entsprechenden Dataframes gemachted werden
-# über die zuvor identifizierten "unique keys"  wird gematched.
+# Basierend auf dem vorletzten Schritt können nun die entsprechenden Dataframes
+# über die zuvor identifizierten "unique keys" gematched werden.
 # Man hätte es auch ohne eine Aufschlüsselung in die einzelnen Fahrzeugtypen machen könnnen, allerdings sind auf diesem Weg mehr Informationen vorhanden.
 
 
-# Matching karosserie types
+# Matching Karosserie Typen
 bauteile_carosserie_typ11 <- inner_join(bestandteile_carosserie_K4, bestandteile_Typ11, by = c("ID_K4" = "ID_Karosserie")) %>%
   # Umbenennen, um eine Spalte namens ID_Karosserie anstelle von ID_K4 zu haben.
   rename(ID_Karosserie = ID_K4) %>%
@@ -427,7 +427,7 @@ bauteile_carosserie_typ22 <- inner_join(bestandteile_carosserie_K7, bestandteile
   select(ID_T34, ID_T35, ID_T38,ID_T39,ID_T40, ID_Fahrzeug, ID_Karosserie)
 
 
-# Matching schaltung
+# Matching Schaltung
 # typ 11 hat "K3SG1" "K3AG1"als schaltungen
 bauteile_schaltung1_typ11 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ11, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
   rename(ID_Schaltung = ID_K3AG1) %>%
@@ -475,7 +475,7 @@ bauteile_sitze2_typ11 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ11
   rename(ID_Sitze = ID_K2ST1) %>%
   select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
 
-# type 12 hat die sitze "K2LE1" "K2ST1"
+# type 12 hat die Sitze "K2LE1" "K2ST1"
 bauteile_sitze1_typ12 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ12, by = c("ID_K2LE1" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE1) %>%
   select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
@@ -484,7 +484,7 @@ bauteile_sitze2_typ12 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ12
   rename(ID_Sitze = ID_K2ST1) %>%
   select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
 
-# type 21 hat die sitze  "K2ST2" "K2LE2"
+# type 21 hat die Sitze  "K2ST2" "K2LE2"
 bauteile_sitze1_typ21 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ21, by = c("ID_K2LE2" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE2) %>%
   select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
@@ -493,7 +493,7 @@ bauteile_sitze2_typ21 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ21
   rename(ID_Sitze = ID_K2ST2) %>%
   select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
 
-# type 22 hat die sitze  "K2ST2" "K2LE2"
+# type 22 hat die Sitze  "K2ST2" "K2LE2"
 bauteile_sitze1_typ22 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ22, by = c("ID_K2LE2" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE2) %>%
   select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
@@ -504,7 +504,7 @@ bauteile_sitze2_typ22 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ22
 
 
 # Matching Motoren
-# type 11 hat die motoren "K1BE1" "K1DI1
+# type 11 hat die Motoren "K1BE1" "K1DI1
 bauteile_motor1_typ11 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ11, by = c("ID_K1BE1" = "ID_Motor")) %>%
   rename(ID_Motor = ID_K1BE1) %>%
   select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
@@ -576,7 +576,7 @@ all_ids_typ12 <- select(all_ids_typ12, -ID_Karosserie, -ID_Schaltung.x,-ID_Schal
 all_ids_typ12 = merge_columns(all_ids_typ12)
 
 
-# Erstellen von Bestandteilen Dataframe Typ 21
+# Erstellen von Bestandteile-Dataframe Typ 21
 all_ids_typ21 <- full_join(bauteile_carosserie_typ21, bauteile_schaltung1_typ21, by = "ID_Fahrzeug") %>%
   full_join(bauteile_schaltung2_typ21, by = "ID_Fahrzeug") %>%
   full_join(bauteile_sitze1_typ21, by = "ID_Fahrzeug") %>%
@@ -589,7 +589,7 @@ all_ids_typ21 <- select(all_ids_typ21, -ID_Karosserie, -ID_Schaltung.x,-ID_Schal
 all_ids_typ21 = merge_columns(all_ids_typ21)
 
 
-# Erstellen von Bestandteilen Dataframe Typ 22
+# Erstellen von Bestandteile-Dataframe Typ 22
 all_ids_typ22 <- full_join(bauteile_carosserie_typ22, bauteile_schaltung1_typ22, by = "ID_Fahrzeug") %>%
   full_join(bauteile_schaltung2_typ22, by = "ID_Fahrzeug") %>%
   full_join(bauteile_sitze1_typ22, by = "ID_Fahrzeug") %>%
@@ -605,7 +605,7 @@ all_ids_typ22 = merge_columns(all_ids_typ22)
 
 
 
-# Erstellen eines Teile Dataframes
+# Erstellen eines Teile-Dataframes
 
 Erstellung eines zusammengeführten Dataframes, der alle zuvor fahrzeugspezifischen Dataframes im vorherigen Schritt zu einem Dataframe zusammenführt.
 Das Ergebnis dieses Codeabschnitts ist der Dataframe "all_df_data".
@@ -626,7 +626,7 @@ glimpse(all_df_data)
 
 
 
-## Einlesen der Einzelteil - Dateien
+## Einlesen der Einzelteil-Dateien
 
 Die nachfolgenden Abschnitte beinhalten das Einlesen der Einzelteil-Dateien.
 Aufgrund schlechter Datenqualität und teilweise höherer Komplexität beim Einlesen der Dateien wurde nachfolgend auf for-schleifen oder Funktionen verzichtet, um die Nachvollziehbarkeit zu erhöhen und die Fehleranfälligkeit zu reduzieren.
