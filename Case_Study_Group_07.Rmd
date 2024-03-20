@@ -9,110 +9,1295 @@ output:
     code_folding: hide
 ---
 
-## Aufgabestellung
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
+
+##Aufgabe
 ### Hintergrund
 Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
 
 ### Aufgabenstellung
-Ziel dieser Case Study ist die Analyse der historischen Daten der letzten drei Jahre (2014 bis 2016) und die Prognose des Bedarfs an Ersatzeinzelteilen für jede Werkstatt in den Städten Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen.
+Ziel dieser Case Study ist die Analyse der historischen Daten der letzten drei Jahre (2014 bis 2016) und die darauf basierende Prognose des Bedarfs an Ersatzeinzelteilen für jede Werkstatt in oben genannten Städten.
+
+Dabei soll zu Analyse der Problemstellung der Case Study eine interaktive Applikation entwicklet werden. Die Ergebnisse werden durch die App visualisiert. 
+
+Nachdem die relevanten Daten importiert und gemäß den Prinzipien von 'tidy data' aufbereitet sowie in einen einzigen finalen Datensatz zusammengeführt wurden, sollte eine App erstellt werden, die die folgenden Ergebnisse analysiert und visualisiert:
+
+*Ein Balkendiagramm, in dem für jeden Monat die Anzahl der Ausfälle für jedes Teil gestapelt wird. Es soll dabei nach den oben genannten Orten ausgewählt und gefiltert werden.
+
+*Der Ausfallverlauf eines auswählbaren Teils. Zudem eine Prognose für das erste Quartal 2017 für das ausgewählte Teil. Es ist hier sowohl der Gesamtausfall, als auch der Ausfall je genannter Stadt auszugeben in der Visualisierung.
+
+*Die Intergartion einer interaktiven Karten, auf der alle Orte makiert sind. Es sollen außerdem, die aus der Prognose hervorgehenden empfohlenden Stückzahlen für ein Teil, als Pop-Ups bei den Orten ergänzt werden.
+
+*Der finale Datensatz soll mit allen notwendigen Eigenschaften als Beweis in Tabellenform abschließend angezeigt werden.
+
+
+## Datenanalyse
+
+Nachfolgend wird die Analyse und Aufarbeitung der Daten erläutert. Hierzu wird zunächst anhand eines Schaubilds erläutert, wie die Datensätze zusammenhängen.
+Die Auswertung der Datensätze hat das Ziel einen finalem dataframe bzw. eine finale .csv Datei zu erstellen, welcher als Ausgangsbasis für die spätere Darstellung in der Shiny-App dient.
+
 
 ## Library 
+Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich. Insbesondere sind folgend diese Pakete benutzt worden:
 
-### Shiny-App Library
-
-Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich. Insbesondere sind folgend diese Pakete benutzt:     
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#Installation und Laden des Pakets "install.load", falls erforderlich. 
+# Hinweis: Das "install.load"-Paket enthält die Funktion install_load.
 
-# Überprüfen, ob das Paket "install.load" verfügbar ist und wenn nicht, installieren
 if(!require(install.load)){
   install.packages("install.load")
   library(install.load)
 }
 
-# Mit der install_load() Funktion werden die folgenden Pakete installiert und geladen:
-install_load("dplyr",     # Datenmanipulation
-            "readr",      # Einlesen von Daten
-            "data.table", # Datenverarbeitung
-            "shiny",      # Erstellung interaktiver Webanwendungen
-            "tidyr",      # Datenbereinigung und -umstrukturierung
-            "DT",         # Interaktive Tabellen
-            "ggplot2",    # Erstellung von Grafiken
-            "lubridate",  # Arbeit mit Datum und Uhrzeit
-            "leaflet")    # Erstellung interaktiver Karten
-
-# Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
-# Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.
-
+# Installation und Laden der genannten Pakete, falls erforderlich   
+install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2", "stringr")
 ```
 
-### Allgemeine Aufgaben Library
 
-Hier ist die Library zu sehen, die für die Allgemeinen Aufgaben benutzt wurde:
+
+
+## Datenimport und Datenbereinigung
+
+Aus Gründen der Übersichtlichkeit wurden die Schritte dews Datenimports und der Datenaufbereitung bewusst so zusammengefasst, dass Schritte gut nachvollziehbar sind und ein möglichst speicherplatzoptimiertes Skript entsteht.
+
+
+#Hilfsfunktionen zur Datenbereinigung
+Die Hilfsfunktionen dienen immer wieder zu Datenaufarbeitungsschritten und werden deshalb am Anfang des Skriptes definiert.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
-# Überprüfen, ob das Paket "install.load" verfügbar ist und wenn nicht, installieren und laden
-if(!require("install.load")){
-  install.packages("install.load")
-  library(install.load)
+find_wrong_names <- function(data, prefixes) {
+  filtered_data <- list()
+  
+  for (prefix in prefixes) {
+    # Konvertieren der Gemeinden in Großbuchstaben
+    data$Gemeinden <- toupper(data$Gemeinden)
+    # Filtern der Gemeinden, die mit dem aktuellen Präfix beginnen
+    filtered_data[[prefix]] <- data[grepl(paste0("^", prefix), data$Gemeinden), ]
+  }
+  
+  return(filtered_data)
 }
 
-# Mit der install_load() Funktion werden die folgenden Pakete installiert und geladen:
-install_load("readr",        # Einlesen von Daten
-             "dplyr",        # Datenmanipulation
-             "ggplot2",      # Erstellung von Grafiken
-             "knitr",        # Erstellung von dynamischen Berichten
-             "tidyverse",    # Sammlung von Paketen zur Datenmanipulation und -visualisierung
-             "plotly",       # Interaktive Grafiken
-             "moments")      # Statistische Momentberechnungen
 
-# Die Argumente message = FALSE und warning = FALSE unterdrücken Nachrichten und Warnungen während der Installation und des Ladens von Paketen.
-# Das Argument cache = TRUE aktiviert den Cache-Mechanismus, um bereits installierte Pakete nicht erneut zu installieren, es sei denn, es gibt eine neuere Version.
+#Funktion zum Ersetzen der fehlerhaften Namen
+update_gemeinden_fehlerhaft <- function(data, old_name, new_name) {
+  # Ersetzen des alten Namens durch den neuen Namen, nur ganze Wörter
+  data$Gemeinden <- gsub(paste0("\\b", old_name, "\\b"), new_name, data$Gemeinden, perl = TRUE)
+  
+  return(data)
+}
+
+#hilfsfunktion zum Zusammenfügen von Spalten
+merge_columns <- function(df) {
+  # Finden aller Spalten, die auf .x enden
+  cols_x <- names(df)[grepl("\\.x$", names(df))]
+  # Ersetzen von .x mit leerem String, um die Originalnamen zu erhalten
+  original_cols <- gsub("\\.x$", "", cols_x)
+  
+  for (col in original_cols) {
+    # Generiere die Namen der .y Spalten basierend auf den .x Spalten
+    col_y <- paste0(col, ".y")
+    # Überprüfe, ob sowohl .x als auch .y Spalten existieren
+    if(col_y %in% names(df)) {
+      # Verwende coalesce, um die Spalten zusammenzuführen
+      df[[col]] <- coalesce(df[[paste0(col, ".x")]], df[[col_y]])
+      # Entferne die ursprünglichen .x und .y Spalten
+      df[[paste0(col, ".x")]] <- NULL
+      df[[col_y]] <- NULL
+    }
+  }
+  
+  return(df)
+}
 
 ```
 
-## Importieren der Daten
-## Erstellen des finalen Datensatzes
+
+# Einlesen der Fahrzeugzulassungen
+
+Lese "Zulassungen_alle_Fahrzeuge.csv" als erste Datei ein.
+Aufgrund von schlechter Datenqualität werden fehlerhafte Daten durch Anwendung der oben erzeugten Hilfsfunktionen eresetzt und korrigiert.
+Der Ende dieses Schrittes führt zum Dataframe "zulassungen_filtered".
+Dieser enthält Die Informationen zur FahrzeugID, den Gemeinden und das Zulassungsdatum (dieses wird zwar nicht mehr benötigt, wurde aufgrund universeller Anwendbarkeit jedoch im Dataframe behalten).
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#einlesen der Daten
+zulassungen <- fread("C:/Users/lueko/Data Science/Data/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
+
+#Analyse der Zulassungsgemeinden
+einzigartige_werte <- zulassungen %>%
+  group_by(Gemeinden) %>%
+  summarise(Anzahl = n()) %>%
+  ungroup()
+
+#glimpse(einzigartige_werte)
+
+#Bei der Analyse der Orte fällt auf, dass teilweise Orte falsch geschrieben sind, nachfolgend werden die falschen Gemeinden analysiert und erneuert
+
+# Präfixe definieren
+prefixes <- c("AACH", "BON", "KOEL", "DORT", "BIEL", "OBERHAUS", "BOCH", "MUENSTER")
+
+# Anwendung der Funktion auf die Gemeindedaten
+zulassungen_fehlerhaft_gemeinden <- find_wrong_names(zulassungen, prefixes)
+
+# Überprüfen der gefilterten Ergebnisse für jedes Präfix
+for (prefix in prefixes) {
+  cat("Gefilterte Ergebnisse für", prefix, ":\n")
+  print(unique(zulassungen_fehlerhaft_gemeinden[[prefix]]$Gemeinden))
+  cat("\n")
+}
+
+# Anwenden der Funktion update_gemeinden auf die Zulassungsdaten
+zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "AACH", "AACHEN")
+zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "AACH1", "AACHEN")
+zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "OBERHAUSEN1", "OBERHAUSEN")
+zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "OBERHAUSEN2", "OBERHAUSEN")
+zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "OBERHAUSEN3", "OBERHAUSEN")
+zulassungen <- update_gemeinden_fehlerhaft(zulassungen, "MUENSTER1", "MUENSTER")
+
+#Benenne IdNummern in ID_Fahrzeug um - dieser Schritt ist erforderlich um einheitliche Ids zu haben
+zulassungen <- zulassungen %>%
+  rename(ID_Fahrzeug = IDNummer)
+
+#glimpse(zulassungen)
+
+zulassungen_filtered <- zulassungen %>% 
+  filter(tolower(Gemeinden) %in% tolower(c("Koeln", "Dortmund", "Bielefeld", "Bonn", "Oberhausen", "Bochum", "Muenster", "Aachen")))
+  #tolower ermöglicht, dass die string sowohl ins capslock, als auch klein oder mischung gefiltert werden
+
+glimpse(zulassungen_filtered)
+
+```
+
+
+# Einlesen der Fahrzeugdaten für jeden OEM Typ
+
+Nachfolgend werden die entsprechenden .csv Dateien eingelesen.
+Diese enthalten für jeden Fahrzeugtyp die verbauten Komponenten.
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+# CSV-Datei einlesen
+
+# Import von Fahrzeug typ 11
+Fahrzeug_Typ11 <- fread("Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+# Import von Fahrzeug typ 12
+Fahrzeug_Typ12 <- fread("Data/Fahrzeug/Fahrzeuge_OEM1_Typ12.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+# Import von Fahrzeug typ 21
+Fahrzeug_Typ21 <- fread("Data/Fahrzeug/Fahrzeuge_OEM2_Typ21.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+# Import von Fahrzeug typ 22
+Fahrzeug_Typ22 <- fread("Data/Fahrzeug/Fahrzeuge_OEM2_Typ22.csv", header = TRUE, data.table = FALSE, select =  c("ID_Fahrzeug", "Produktionsdatum", "Werksnummer", "Fehlerhaft", "Fehlerhaft_Datum"))
+                        
+```
+
+Direkt anknüpfend daran wird ein Dataframe erstellt, welche über einen left_join - Operator die eingelesenen Fahrzeugkomponenten mit den für diese Analyse erforderlichen FahrzeugIDs matched.
+Das Ergebnis dieses Codeabschnitts ist der Dataframe "oem_integrated".
+
+Eigentlich sollte in diesem Schritt bereits eine Vorfilterung vorgenommen werden, die fehlerhafte Fahrzeuge für den entsprechenden Zeitraun filtert und die Dataframes entsprechend verkürzt.
+Bei der Auswertung von Ergebnissen zeigte sich jedoch, dass teilweise Fahrzeugteile defekt sind, obwohl das Fahrzeug nicht als fehlerhaft gemeldet wird.
+Da eine Filterung hier das Skript insgesamt beschleunigen würde, ist der Code weiterhin enthalten. Es sei jedoch ausdrücklich darauf hingewiesen, dass eine Filterung nach Fehlerhaft und/oder Jahren hier erst sinnvoll ist, wenn bei der Datenpflege entsprechende Maßnahmen ergriffen werden.
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#zusammenfügen von Fahrzeugdaten
+oem_integrated <- left_join(zulassungen_filtered,Fahrzeug_Typ11, by = "ID_Fahrzeug")
+oem_integrated <- left_join(oem_integrated,Fahrzeug_Typ12, by = "ID_Fahrzeug")
+oem_integrated <- merge_columns(oem_integrated)
+oem_integrated <- left_join(oem_integrated,Fahrzeug_Typ21, by = "ID_Fahrzeug")
+oem_integrated <- merge_columns(oem_integrated)
+oem_integrated <- left_join(oem_integrated,Fahrzeug_Typ22, by = "ID_Fahrzeug")
+oem_integrated <- merge_columns(oem_integrated)
+
+glimpse(oem_integrated)
+
+```
+
+
+
+# Einlesen der Geodaten 
+
+Nachfolgend werden die für diese Analyse relevanten Geodaten aus der Datei "Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv" eingelesen.
+Der dadurch entstandene Dataframe "geodaten" wird anschließend mit der dem bereits zuvor erstellten Dataframe oem_integrated zusammengefügt.
+Als Ergebnis dieses Codeabschnitts wird der Dataframe oem_integrated_geo erzielt.
+Zur Nachvollziehbarkeit der Inhalte wird auf das bereitgestellte Schaubild zur Visualisierung der Datenstruktur verwiesen.
+
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+geodaten <- fread("Data/Geodaten/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
+geodaten <- geodaten %>%
+  rename(Gemeinden = Gemeinde) %>%
+   select(-V1,-X,-Postleitzahl)
+
+#entferne nicht relevanten Zeilen
+oem_integrated <- oem_integrated %>% 
+  select(-V1,-Zulassung,-Produktionsdatum,-Werksnummer,-Fehlerhaft,-Fehlerhaft_Datum)
+
+#füge die Längen- und Breitengrade hinzu
+oem_integrated_geo <-left_join(oem_integrated,geodaten,by="Gemeinden")
+
+glimpse(oem_integrated_geo)
+
+```
+
+
+
+
+#Einlesen von Fahrzeugbestandteilen
+
+Im nächsten Schritt werden die Fahrzeugbestandteile eingelesen.
+Die Bestandteile widerum enthalten Informationen zu den Komponenten des Fahrzeugs.
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 11
+bestandteile_Typ11 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", header = TRUE, data.table = FALSE)
+#entferne die index spalte
+bestandteile_Typ11 <- bestandteile_Typ11 %>% 
+  select(-V1)
+
+#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 12
+bestandteile_Typ12 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", header = TRUE, data.table = FALSE)
+#entferne die index spalte
+bestandteile_Typ12 <- bestandteile_Typ12 %>%
+  select(-V1)
+
+#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 21
+bestandteile_Typ21 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv", header = TRUE, data.table = FALSE)
+#entferne die index spalte
+bestandteile_Typ21 <- bestandteile_Typ21 %>%
+  select(-V1)
+
+#Einlesen der Fahrzeugbestandteile von Fahrzeug Typ 22
+bestandteile_Typ22 <- fread("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv", header = TRUE, data.table = FALSE)
+#entferne die index spalte
+bestandteile_Typ22 <- bestandteile_Typ22 %>%
+  select(-X1)
+```
+
+
+
+
+# Aalyse der pro Fahrzeugtyp verbauten Komponenten
+
+Der nachfolgenbde Code diente lediglich dazu herauszufinden, welche "keys" bei den jeweiligen Fahrzeugen enthalten sind.
+Für die Analyse ist der Codeabschnitt nicht erforderlich, jedoch aus Gründen der Vollständigkeit enthalten.
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#die Ids selbst sind in der jeweiligen column
+carosserie_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Karosserie, "-"), `[`, 1))
+schaltung_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Schaltung, "-"), `[`, 1))
+sitze_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Sitze, "-"), `[`, 1))
+motor_Ids_11_key = unique(sapply(strsplit(bestandteile_Typ11$ID_Motor, "-"), `[`, 1))
+
+#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+#print(carosserie_Ids_11_key)
+#print(schaltung_Ids_11_key)
+#print(sitze_Ids_11_key)
+#print(motor_Ids_11_key)
+
+#die Ids selbst sind in der jeweiligen column
+carosserie_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Karosserie, "-"), `[`, 1))
+schaltung_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Schaltung, "-"), `[`, 1))
+sitze_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Sitze, "-"), `[`, 1))
+motor_Ids_12_key = unique(sapply(strsplit(bestandteile_Typ12$ID_Motor, "-"), `[`, 1))
+
+#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+#print(carosserie_Ids_12_key)
+#print(schaltung_Ids_12_key)
+#print(sitze_Ids_12_key)
+#print(motor_Ids_12_key)
+
+
+#die Ids selbst sind in der jeweiligen column
+carosserie_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Karosserie, "-"), `[`, 1))
+schaltung_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Schaltung, "-"), `[`, 1))
+sitze_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Sitze, "-"), `[`, 1))
+motor_Ids_21_key = unique(sapply(strsplit(bestandteile_Typ21$ID_Motor, "-"), `[`, 1))
+
+#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+#print(carosserie_Ids_21_key)
+#print(schaltung_Ids_21_key)
+#print(sitze_Ids_21_key)
+#print(motor_Ids_21_key)
+
+
+#die Ids selbst sind in der jeweiligen column
+carosserie_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Karosserie, "-"), `[`, 1))
+schaltung_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Schaltung, "-"), `[`, 1))
+sitze_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Sitze, "-"), `[`, 1))
+motor_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Motor, "-"), `[`, 1))
+
+#hier kann man eine Prüfung durchführen, ob die Länge von unique immer 1 ist um klar zu zuweisen, dass es immer nur 1 gibt
+#print(carosserie_Ids_22_key)
+#print(schaltung_Ids_22_key)
+#print(sitze_Ids_22_key)
+#print(motor_Ids_22_key)
+```
+
+
+
+#Einlesen der Fahrzeugkomponenten
+
+Nachfolgend werden die .csv Dateien der Komponenten eingelesen.
+Zur Besseren Nachvollziehbarkeit wurde auf eine Implementierung mittels for-loop verzichtet.
+Das Ergebnis des Codeabschnits ist ein Dataframe für jede Fahrzeugkomponente.
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+#Einlesen der Komponente
+bestandteile_motor_K1BE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE1.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_motor_K1BE2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1BE2.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_motor_K1DI1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1DI1.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_motor_K1DI2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K1DI2.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_sitze_K2LE1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2LE1.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_sitze_K2LE2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2LE2.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_sitze_K2ST1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2ST1.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_sitze_K2ST2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K2ST2.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_schaltung_K3AG1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3AG1.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_schaltung_K3AG2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3AG2.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_schaltung_K3SG1 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3SG1.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_schaltung_K3SG2 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K3SG2.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_carosserie_K4 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K4.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_carosserie_K5 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K5.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_carosserie_K6 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K6.csv", header = TRUE, data.table = FALSE)
+
+#Einlesen der Komponente
+bestandteile_carosserie_K7 <-fread("Data/Komponente/Komponente/Bestandteile_Komponente_K7.csv", header = TRUE, data.table = FALSE)
+```
+
+
+
+
+
+#Vorbereitung zur Erstellung von Fahrzeugtypbezogenen Dataframes
+
+Im nachfolgenden Codeabschnitt werden für jeden Fahrzeugtyp dataframes erstellt, die die entsprechenden Komponenten beinhalten.
+Zur Vermeidung von Fehlern und zur Erhöhung der Nachvollziehbarkeit wurde auf alternative Ansätze des nachfolgenden Codeabschnitts, beispielsweise durch Funktionen, verzichtet.
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#basierend auf dem vorletzten schritt können nun die entsprechenden dataframes gemachted werden
+#über die zuvor identifizierten "unique keys"  wird gematched
+#man hätte es auch ohne eine aufschlüsselung in die einzelnen Fahrzeugtypen machen könnnen, allerdings sind auf diesem Weg mehr Informationen vorhanden
+
+
+# matching karosserie types
+bauteile_carosserie_typ11 <- inner_join(bestandteile_carosserie_K4, bestandteile_Typ11, by = c("ID_K4" = "ID_Karosserie")) %>%
+  #renaming to have a column called ID_Karosserie instead of ID_K4
+  rename(ID_Karosserie = ID_K4) %>%
+  # Auswählen der gewünschten Spalten
+  select(ID_T30, ID_T31, ID_T32, ID_Fahrzeug, ID_Karosserie)
+
+bauteile_carosserie_typ12 <- inner_join(bestandteile_carosserie_K5, bestandteile_Typ12, by = c("ID_K5" = "ID_Karosserie")) %>%
+  rename(ID_Karosserie = ID_K5) %>%
+  select(ID_T30, ID_T31, ID_T33, ID_Fahrzeug, ID_Karosserie)
+
+bauteile_carosserie_typ21 <- inner_join(bestandteile_carosserie_K6, bestandteile_Typ21, by = c("ID_K6" = "ID_Karosserie"))%>%
+  rename(ID_Karosserie = ID_K6) %>%
+  select(ID_T34, ID_T35, ID_T36,ID_T37, ID_Fahrzeug, ID_Karosserie)
+
+bauteile_carosserie_typ22 <- inner_join(bestandteile_carosserie_K7, bestandteile_Typ22, by = c("ID_K7" = "ID_Karosserie"))%>%
+  rename(ID_Karosserie = ID_K7) %>%
+  select(ID_T34, ID_T35, ID_T38,ID_T39,ID_T40, ID_Fahrzeug, ID_Karosserie)
+
+
+#matching schaltung
+#typ 11 hat "K3SG1" "K3AG1"als schaltungen
+bauteile_schaltung1_typ11 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ11, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3AG1) %>%
+  select(ID_T21, ID_T24, ID_T25, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ11 <- inner_join(bestandteile_schaltung_K3SG1, bestandteile_Typ11, by = c("ID_K3SG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG1) %>%
+  select(ID_T21, ID_T22, ID_T23, ID_Fahrzeug, ID_Schaltung)
+
+#typ 12 hat "K3SG1" "K3AG1"als Schaltungen
+bauteile_schaltung1_typ12 <- inner_join(bestandteile_schaltung_K3AG1, bestandteile_Typ12, by = c("ID_K3AG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3AG1) %>%
+  select(ID_T21, ID_T24, ID_T25, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ12 <- inner_join(bestandteile_schaltung_K3SG1, bestandteile_Typ12, by = c("ID_K3SG1" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG1) %>%
+  select(ID_T21, ID_T22, ID_T23, ID_Fahrzeug, ID_Schaltung)
+
+#type 21 hat "K3AG2" "K3SG2" als SChaltungen
+bauteile_schaltung1_typ21 <- inner_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3AG2) %>%
+  select(ID_T21, ID_T24, ID_T27, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ21 <- inner_join(bestandteile_schaltung_K3SG2, bestandteile_Typ21, by = c("ID_K3SG2" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG2) %>%
+  select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
+
+#type 22 hat "K3AG2" "K3SG2 als Schaltungen
+bauteile_schaltung1_typ22 <- inner_join(bestandteile_schaltung_K3AG2, bestandteile_Typ21, by = c("ID_K3AG2" = "ID_Schaltung"))%>%
+  rename(ID_Schaltung = ID_K3AG2) %>%
+  select(ID_T21, ID_T24, ID_T27, ID_Fahrzeug, ID_Schaltung)
+
+bauteile_schaltung2_typ22 <- inner_join(bestandteile_schaltung_K3SG2, bestandteile_Typ21, by = c("ID_K3SG2" = "ID_Schaltung")) %>%
+  rename(ID_Schaltung = ID_K3SG2) %>%
+  select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
+
+
+#matching sitze
+#type 11 hat die sitze "K2LE1" "K2ST1"
+bauteile_sitze1_typ11 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ11, by = c("ID_K2LE1" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE1) %>%
+  select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ11 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ11, by = c("ID_K2ST1" = "ID_Sitze"))%>%
+  rename(ID_Sitze = ID_K2ST1) %>%
+  select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
+
+#type 12 hat die sitze "K2LE1" "K2ST1"
+bauteile_sitze1_typ12 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ12, by = c("ID_K2LE1" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE1) %>%
+  select(ID_T11, ID_T14, ID_T15, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ12 <- inner_join(bestandteile_sitze_K2ST1, bestandteile_Typ12, by = c("ID_K2ST1" = "ID_Sitze"))%>%
+  rename(ID_Sitze = ID_K2ST1) %>%
+  select(ID_T11, ID_T12, ID_T13, ID_Fahrzeug, ID_Sitze)
+
+#type 21 hat die sitze  "K2ST2" "K2LE2"
+bauteile_sitze1_typ21 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ21, by = c("ID_K2LE2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE2) %>%
+  select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ21 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ21, by = c("ID_K2ST2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2ST2) %>%
+  select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
+
+#type 22 hat die sitze  "K2ST2" "K2LE2"
+bauteile_sitze1_typ22 <- inner_join(bestandteile_sitze_K2LE2, bestandteile_Typ22, by = c("ID_K2LE2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2LE2) %>%
+  select(ID_T16, ID_T19, ID_T20, ID_Fahrzeug, ID_Sitze)
+
+bauteile_sitze2_typ22 <- inner_join(bestandteile_sitze_K2ST2, bestandteile_Typ22, by = c("ID_K2ST2" = "ID_Sitze")) %>%
+  rename(ID_Sitze = ID_K2ST2) %>%
+  select(ID_T16, ID_T17, ID_T18, ID_Fahrzeug, ID_Sitze)
+
+
+#matching motoren
+#type 11 hat die motoren "K1BE1" "K1DI1
+bauteile_motor1_typ11 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ11, by = c("ID_K1BE1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE1) %>%
+  select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ11 <- inner_join(bestandteile_motor_K1DI1, bestandteile_Typ11, by = c("ID_K1DI1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI1) %>%
+  select(ID_T1, ID_T2, ID_T5, ID_T6, ID_Fahrzeug, ID_Motor)
+
+#type 12 hat die motoren "K1BE1" "K1DI1
+bauteile_motor1_typ12 <- inner_join(bestandteile_motor_K1BE1, bestandteile_Typ12, by = c("ID_K1BE1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE1) %>%
+  select(ID_T1, ID_T2, ID_T3, ID_T4, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ12 <- inner_join(bestandteile_motor_K1DI1, bestandteile_Typ12, by = c("ID_K1DI1" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI1) %>%
+  select(ID_T1, ID_T2, ID_T5, ID_T6, ID_Fahrzeug, ID_Motor)
+
+#type 21 hat die motoren "K1BE2" "K1DI2"
+bauteile_motor1_typ21 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ21, by = c("ID_K1BE2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE2) %>%
+  select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ21 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ12, by = c("ID_K1DI2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI2) %>%
+  select(ID_T1, ID_T2, ID_T9, ID_T10, ID_Fahrzeug, ID_Motor)
+
+
+#type 22 hat die motoren "K1BE2" "K1DI2"
+bauteile_motor1_typ22 <- inner_join(bestandteile_motor_K1BE2, bestandteile_Typ22, by = c("ID_K1BE2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1BE2) %>%
+  select(ID_T1, ID_T2, ID_T7, ID_T8, ID_Fahrzeug, ID_Motor)
+
+bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22, by = c("ID_K1DI2" = "ID_Motor")) %>%
+  rename(ID_Motor = ID_K1DI2) %>%
+  select(ID_T1, ID_T2, ID_T9, ID_T10, ID_Fahrzeug, ID_Motor)
+
+```
+
+
+#Erstellen von dataframes für jeden Fahrzeugtyp
+
+Erstellen von Dataframes für jeden Fahrzeugtyp mit allen Einzelteil-Ids.
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+#Erstellen von Bestandteilen dataframe Typ 11
+all_ids_typ11 <- full_join(bauteile_carosserie_typ11, bauteile_schaltung1_typ11, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_schaltung2_typ11, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze1_typ11, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze2_typ11,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor1_typ11,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor2_typ11,by = "ID_Fahrzeug")
+
+#entfernen von überflüssigen Spalten
+all_ids_typ11 <- select(all_ids_typ11, -ID_Karosserie, -ID_Schaltung.x,-ID_Schaltung.y,-ID_Sitze.x,-ID_Sitze.y,-ID_Motor.x,-ID_Motor.y)
+# Zusammenführen der Spalten a.x und a.y in eine neue Spalte a
+all_ids_typ11 = merge_columns(all_ids_typ11)
+
+
+#Erstellen von Bestandteilen dataframe Typ 12
+all_ids_typ12 <- full_join(bauteile_carosserie_typ12, bauteile_schaltung1_typ12, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_schaltung2_typ12, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze1_typ12, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze2_typ12,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor1_typ12,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor2_typ12,by = "ID_Fahrzeug")
+
+all_ids_typ12 <- select(all_ids_typ12, -ID_Karosserie, -ID_Schaltung.x,-ID_Schaltung.y,-ID_Sitze.x,-ID_Sitze.y,-ID_Motor.x,-ID_Motor.y)
+# Zusammenführen der Spalten a.x und a.y in eine neue Spalte a
+all_ids_typ12 = merge_columns(all_ids_typ12)
+
+
+#Erstellen von Bestandteilen dataframe Typ 21
+all_ids_typ21 <- full_join(bauteile_carosserie_typ21, bauteile_schaltung1_typ21, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_schaltung2_typ21, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze1_typ21, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze2_typ21,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor1_typ21,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor2_typ21,by = "ID_Fahrzeug")
+
+all_ids_typ21 <- select(all_ids_typ21, -ID_Karosserie, -ID_Schaltung.x,-ID_Schaltung.y,-ID_Sitze.x,-ID_Sitze.y,-ID_Motor.x,-ID_Motor.y)
+# Zusammenführen der Spalten a.x und a.y in eine neue Spalte a
+all_ids_typ21 = merge_columns(all_ids_typ21)
+
+
+#Erstellen von Bestandteilen dataframe Typ 22
+all_ids_typ22 <- full_join(bauteile_carosserie_typ22, bauteile_schaltung1_typ22, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_schaltung2_typ22, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze1_typ22, by = "ID_Fahrzeug") %>%
+  full_join(bauteile_sitze2_typ22,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor1_typ22,by = "ID_Fahrzeug") %>%
+  full_join(bauteile_motor2_typ22,by = "ID_Fahrzeug")
+
+all_ids_typ22 <- select(all_ids_typ22, -ID_Karosserie, -ID_Schaltung.x,-ID_Schaltung.y,-ID_Sitze.x,-ID_Sitze.y,-ID_Motor.x,-ID_Motor.y)
+# Zusammenführen der Spalten a.x und a.y in eine neue Spalte a
+all_ids_typ22 = merge_columns(all_ids_typ22)
+
+```
+
+
+
+#Erstellen eines des Teile Dataframes
+
+Erstellung eines zusammengeführten Dataframes, der alle zuvor fahrzeugspezifischen Dataframes im vorherigen Schritt zu einem Dataframe zusammenführt.
+Das Ergebnis dieses Codeabschnitts ist der Dataframe "all_df_data".
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+all_df_data <- bind_rows(all_ids_typ11,all_ids_typ12,all_ids_typ21,all_ids_typ22)
+#rumbenennen von Spalten
+names(all_df_data)[names(all_df_data) == "ID_T1"] <- "ID_T01"
+names(all_df_data)[names(all_df_data) == "ID_T2"] <- "ID_T02"
+names(all_df_data)[names(all_df_data) == "ID_T3"] <- "ID_T03"
+names(all_df_data)[names(all_df_data) == "ID_T4"] <- "ID_T04"
+names(all_df_data)[names(all_df_data) == "ID_T5"] <- "ID_T05"
+names(all_df_data)[names(all_df_data) == "ID_T6"] <- "ID_T06"
+names(all_df_data)[names(all_df_data) == "ID_T7"] <- "ID_T07"
+names(all_df_data)[names(all_df_data) == "ID_T8"] <- "ID_T08"
+names(all_df_data)[names(all_df_data) == "ID_T9"] <- "ID_T09"
+glimpse(all_df_data)
+```
+
+
+
+## Einlesen der Einzelteil - Dateien
+
+Die nachfolgenden Abschnitte beinhalten das Einlesen der Einzelteil-Dateien.
+Aufgrund schlechter Datenqualität und teilweise höherer Komplexität beim Einlesen der Dateien wurde nachfolgend auf for-schleifen oder Funktionen verzichtet, um die Nachvollziehbarkeit zu erhöhen und die Fehleranfälligkeit zu reduzieren.
+Beim Einlesen der Einzelteile wurd für jedes Teil der entsprechende zeitraum gefiltert.
+Das Ergebis des Codeabschnitts ist jeweils ein Dataframe für jedes Einzelteil, welcher alle fehlerhaften Einzelteile in dem entsprechenden Zeitraum enthält.
+
+
+#1 Einzelteil T01 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+path = "Data/Einzelteil/Einzelteil/Einzelteil_T01.txt"
+txt <- readLines(path)
+txt <- gsub(" | | ",",",txt, fixed = TRUE)
+txt <- gsub(" ","\n",txt, fixed = TRUE)
+part_T01 <- fread(text = txt, sep = ",", data.table = FALSE, drop=c(1,2)) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+#anpassen von Verdoppelungen
+part_T01 = merge_columns(part_T01)
+names(part_T01)[names(part_T01) == "Fehlerhaft_Datum"] <- "Fehlerhaft_Datum_T01"
+names(part_T01)[names(part_T01) == "Fehlerhaft_Fahrleistung"] <- "Fehlerhaft_Fahrleistung_T01"
+#glimpse(part_T01)
+
+```
+
+
+#2 Einzelteil T02 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+path = "Data/Einzelteil/Einzelteil/Einzelteil_T02.txt"
+
+txt <- readLines(path)
+txt <- gsub("  ",",",txt, fixed = TRUE)
+txt <- gsub("\t","\n",txt, fixed = TRUE)
+part_T02 <- fread(text = txt, sep = ",", data.table = FALSE, drop=c(1,2)) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+
+#anpassen von Verdoppelungen
+part_T02 = merge_columns(part_T02)
+#glimpse(part_T02)
+
+```
+
+
+#Einzelteil T03 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T03.txt")
+txt <- gsub("|",",",txt, fixed = TRUE)
+txt <- gsub("\v","\n",txt, fixed = TRUE)
+part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter((Fehlerhaft== 1) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016))) 
+#glimpse(part_T03)
+
+```
+
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+  part_T04 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T04.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T04)
+
+```
+
+
+#Einzelteil T05 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T05 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE, drop= c(1,2)) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+part_T05 = merge_columns(part_T05)
+#glimpse(part_T05)
+```
+
+
+#6 Einzelteil T06 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T06 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T06.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T06)
+```
+
+
+#7 Einzelteil T07 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T07.txt")
+txt <- gsub("\"\t\"",",",txt)
+txt <- gsub("\"\t",",",txt)
+txt <- gsub("\t\"",",",txt)
+txt <- gsub("\t",",",txt)
+txt <- gsub("\"\"","\n",txt)
+txt <- gsub("\"","\n",txt)
+part_T07 <- fread(text = txt, sep = ",", quote = "", data.table = FALSE) %>% 
+  filter((Fehlerhaft == 1) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016))) 
+#glimpse(part_T07)
+```
+
+
+#8 Einzelteil T08 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T08 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T08.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T08)
+```
+
+
+#9 Einzelteil T09 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+part_T09 <- read_file("Data/Einzelteil/Einzelteil/Einzelteil_T09.txt") %>% 
+  str_replace_all('\\\"', '') %>%
+  str_replace_all('\\\\', ',') %>%
+  str_replace_all('\v','\n')
+part_T09 <- fread(part_T09, sep =",", drop = c(1,2)) %>%
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+part_T09 = merge_columns(part_T09)
+glimpse(part_T09)
+```
+
+
+#10 Einzelteil T10 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T10 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T10)
+```
+
+
+#10 Einzelteil T10 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T10 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T10)
+```
+
+
+#11 Einzelteil T11 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T11.txt")
+txt <- gsub("\t", ",", txt, fixed = TRUE)
+txt <- gsub("\f", "\n", txt, fixed = TRUE)
+part_T11 <- fread(text = txt, sep = ",", data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 & 
+           year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) 
+#glimpse(part_T11)
+```
+
+
+#12 Einzelteil T12 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T12 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T12.csv", header = TRUE, data.table = FALSE, drop = c(1,2)) %>% 
+    filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+part_T12 = merge_columns(part_T12)
+#glimpse(part_T12)
+```
+
+
+#13 Einzelteil T13 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T13 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T13.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T13)
+```
+
+
+#14 Einzelteil T14 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T14 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T14.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T14)
+```
+
+
+#15 Einzelteil T15 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T15 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T15.csv", header = TRUE, data.table = FALSE, drop= c(1,2)) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+part_T15 = merge_columns(part_T15)
+#glimpse(part_T15)
+```
+
+
+#16 Einzelteil T16 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T16 <- read_file("Data/Einzelteil/Einzelteil/Einzelteil_T16.txt") %>%
+  str_replace_all(" \\| \\| ", ",") %>%
+  str_replace_all("\t","\n")
+part_T16 <- fread(part_T16, sep =",", drop = c(1,2)) %>%
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+part_T16 = merge_columns(part_T16)
+#glimpse(part_T16)
+```
+
+
+#17 Einzelteil T17 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T17 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T17.csv", header = TRUE, data.table = FALSE, drop = c(1,2)) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+part_T17 = merge_columns(part_T17)
+#glimpse(part_T17)
+```
+
+
+#18 Einzelteil T18 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T18 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T18.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T18)
+```
+
+
+#19 Einzelteil T19 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T19 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T19.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T19)
+```
+
+
+#20 Einzelteil T20 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#txt <- readLines(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T20.txt"))
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T20.txt")
+txt <- gsub(" | | ",",",txt, fixed = TRUE)
+txt <- gsub(" ","\n",txt, fixed = TRUE)
+part_T20 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2,10)) %>% 
+    filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T20)
+```
+
+
+21 Einzelteil T21 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T21 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE,drop = c(1,2,10)) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T21)
+```
+
+
+#22 Einzelteil T22 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T22.txt")
+txt <- gsub("\"\t\"", ",", txt)
+txt <- gsub("\"\t", ",", txt)
+txt <- gsub("\t\"", ",", txt)
+txt <- gsub("\t", ",", txt)
+txt <- gsub("\"\"", "\n", txt)
+txt <- gsub("\"", "\n", txt)
+
+part_T22 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1, 2, 10)) %>% 
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1) &
+           ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+            (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+            (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+
+part_T22 = merge_columns(part_T22)
+#glimpse(part_T22)
+```
+
+
+#23 Einzelteil T23 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T23 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T23.csv", header = TRUE, data.table = FALSE,drop = c(1,2)) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+part_T23 = merge_columns(part_T23)
+#glimpse(part_T23)
+
+```
+
+
+#24 Einzelteil T24 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T24.txt")
+txt <- gsub("  ",",",txt, fixed = TRUE)
+txt <- gsub("\f","\n",txt, fixed = TRUE)
+part_T24 <- fread(text = txt, sep = ",", data.table = FALSE, drop =c(1,2)) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+part_T24 = merge_columns(part_T24)
+#glimpse(part_T24)
+```
+
+
+25 Einzelteil T25 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T25 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T25.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T25)
+```
+
+
+#26 Einzelteil T26 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T26 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T26.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T26)
+```
+
+
+#27 Einzelteil T27 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#part_T27 <- read_file(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T27.txt")) %>%
+part_T27 <- read_file("Data/Einzelteil/Einzelteil/Einzelteil_T27.txt")%>%
+  str_replace_all(" \\| \\| ", ",") %>%
+  str_replace_all("\a", "\n") 
+part_T27 <- fread(part_T27, sep =",", drop = c(1,2))%>%
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T27)
+```
+
+
+#30 Einzelteil T30 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T30 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T30.csv", header = TRUE, data.table = FALSE) %>% 
+   filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+part_T30 = merge_columns(part_T30)
+#glimpse(part_T30)
+```
+
+
+#31 Einzelteil T31 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+txt <- readLines("Data/Einzelteil/Einzelteil/Einzelteil_T31.txt")
+txt <- gsub("  ",",",txt, fixed = TRUE)
+txt <- gsub("\b","\n",txt, fixed = TRUE)
+part_T31 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2)) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T31)
+```
+
+
+#32 Einzelteil T32 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T32 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T32.csv", header = TRUE, data.table = FALSE, drop = c(1.2)) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+
+part_T32 = merge_columns(part_T32)
+#glimpse(part_T32)
+```
+
+
+#33 Einzelteil T33 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T33 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T33.csv", header = TRUE, data.table = FALSE) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T33)
+```
+
+
+#34 Einzelteil T34 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T34 <- read_file("Data/Einzelteil/Einzelteil/Einzelteil_T34.txt") %>%
+  str_replace_all(" \\| \\| ", ",") %>%
+  str_replace_all("\"\"", "\"\n\"")
+part_T34 <- fread(part_T34, sep = ",", data.table = FALSE, drop = c(1,2,10)) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T34)
+```
+
+
+#35 Einzelteil T35 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T35 <- read_file("Data/Einzelteil/Einzelteil/Einzelteil_T35.txt") %>%
+  str_replace_all("\\\\", ", ") %>%
+  str_replace_all("(?<=\\S)(\"\\d+\")", "\n")
+part_T35 <- fread(part_T35, sep = ",", drop = c(1,2))%>%
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+part_T35 = merge_columns(part_T35)
+#glimpse(part_T35)
+```
+
+
+#36 Einzelteil T36 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+# Dateipfad zur Textdatei
+dateipfad <- "Data/Einzelteil/Einzelteil/Einzelteil_T36.txt"
+
+# Einlesen der Textdatei als reine Zeichenfolge
+text <- read_file(dateipfad)
+
+text <- gsub("\"", "", text)
+
+rowlist <- scan(dateipfad, what = character(), sep = "")
+
+list <- rowlist[11:length(rowlist)]
+
+part_T36 <- matrix(list, nrow = length(list)/10, ncol = 10, byrow = TRUE)
+
+colnames(part_T36) <- c(rowlist[1],rowlist[2], rowlist[3], rowlist[4], rowlist[5], rowlist[6], rowlist[7], rowlist[8], rowlist[9],rowlist[10])
+
+part_T36 <- data.frame(part_T36) %>%
+  filter(part_T36[,5] == "1" &
+           ((year(as.Date(part_T36[,6])) >= 2014 & year(as.Date(part_T36[,6])) <= 2016)))
+
+#glimpse(part_T36)
+```
+
+
+#37 Einzelteil T37 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T37 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T37.csv", header = TRUE, data.table = FALSE, drop = c(1,2,10)) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+#glimpse(part_T37)
+```
+
+
+#38 Einzelteil T38 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T38 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T38.csv", header = TRUE, data.table = FALSE, drop = c(1,2)) %>% 
+ filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016))) 
+part_T38 = merge_columns(part_T38)
+#glimpse(part_T38)
+```
+
+
+#39 Einzelteil T39 einlesen
+```{r message=FALSE, warning=FALSE, cache=FALSE}
+part_T39 <- read_file("Data/Einzelteil/Einzelteil/Einzelteil_T39.txt") %>%
+  str_replace_all("\\\\", ",") %>%
+  str_replace_all("\a", "\n") 
+part_T39 <- fread(part_T39, sep = ",", drop = c(1,2)) %>%
+  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
+         ((year(as.Date(Fehlerhaft_Datum.x)) >= 2014 & year(as.Date(Fehlerhaft_Datum.x)) <= 2016) |
+          (year(as.Date(Fehlerhaft_Datum.y)) >= 2014 & year(as.Date(Fehlerhaft_Datum.y)) <= 2016)))
+
+part_T39 = merge_columns(part_T39)
+#glimpse(part_T39)
+```
+
+
+#40 Einzelteil T40 einlesen
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+part_T40 <- fread("Data/Einzelteil/Einzelteil/Einzelteil_T40.csv", header = TRUE, data.table = FALSE, drop = c(1,2,10)) %>% 
+  filter(Fehlerhaft == 1 &
+         ((year(as.Date(Fehlerhaft_Datum)) >= 2014 & year(as.Date(Fehlerhaft_Datum)) <= 2016)))
+part_T40 = merge_columns(part_T40)
+#glimpse(part_T40)
+```
+
+
+
+
+## Erstellen des finalen Datensates
+
+
+# Erstellen des ersten finalen dataframes für T01
+
+Die Erstellung des finalen Datensatzes ist ein iterativer Prozess.
+Hierfür wird in einem ersten Schritt zunächst der finale Datensatz für T01 erstellt.
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+#erstelle einen neued df mit spalten des alten
+selection_part_T01 <- select(part_T01,ID_T01,Fehlerhaft_Datum_T01, Fehlerhaft_Fahrleistung_T01)
+glimpse(selection_part_T01)
+
+#erstelle einen neued df mit spalten des alten
+#wähle spalten aus gesamt df aus
+all_df_selection_T01 <- select(all_df_data,ID_Fahrzeug, ID_T01)
+glimpse(all_df_selection_T01)
+#entferne na values aus df  für schnelleres matchen
+#hier müssen wir auf jeden fall nochmal schauen, ob zu viele werte entfernt werden
+all_df_selection_T01 <- na.omit(all_df_selection_T01)
+glimpse(all_df_selection_T01)
+
+#zusammenfügen der dataframes
+final_df_T01 <- inner_join(all_df_selection_T01, selection_part_T01, by = "ID_T01")
+#entferne alle na values
+#hier müssen wir auf jeden fall nochmal schauen, ob zu viele werte entfernt werden
+#glimpse(final_df_T01)
+```
+
+#Erstellen des finalen Dataframes
+
+Basierend auf dem Ausgangsdataframe (final_df_T01) wird nun anschließend mittels einer for-Schleife für jedes Einzelteil der entsprechende Dataframe erstellt und anschließend mittels full_join an den bestehenden Dataframe angefügt.
+
+
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+#als vorbereitungsschritt wird hier final_df als final_df_t01 initialisiert
+final_df = final_df_T01
+
+#Erstellen einer Liste für die Einzelteile
+part_list <- sprintf("T%02d", 2:40)
+#Definition der nicht vorhandenen Einzelteile
+zu_entfernen <- c("T28", "T29")
+
+# Entfernen der spezifischen Elemente und Aktualisieren der Liste
+part_list <- setdiff(part_list, zu_entfernen)
+
+
+print(part_list)
+
+for(part_name in part_list) {
+  
+  #umbennen der spalten - neuer name
+  fehlerhaft_datum_name <- paste0("Fehlerhaft_Datum_", part_name)
+  
+  #definieren der teile ID
+  id_name <- paste0("ID_", part_name)
+  
+  #definieren des dataframes
+  df_name <- paste0("part_", part_name)
+  
+  #öffne den df wenn er exisitert
+  part_df <- get(df_name)
+  
+  # Umbenennen der Spalten im part_df
+  part_df <- part_df %>%
+    rename(!!fehlerhaft_datum_name := Fehlerhaft_Datum)
+  
+  # Auswahl spezifischer Spalten
+  selection_part <- select(part_df, !!id_name, !!fehlerhaft_datum_name)#, !!fehlerhaft_fahrleistung_name)
+  
+  # Auswahl und Bereinigung im all_df_data
+  all_df_selection <- select(all_df_data, ID_Fahrzeug, !!id_name) %>%
+    na.omit()
+  
+  # Zusammenführen der teilbezogenen DataFrames
+  final_df_part <- inner_join(all_df_selection, selection_part, by = id_name)
+  
+  #das hier muss sowohl auf dem geloopten, als auch auf dem final df basieren
+  final_df <- full_join(final_df, final_df_part, by = "ID_Fahrzeug")
+}
+```
+
+
+# Erstellen des finalen Datensatzes
+
+Im nachfolgenden Abschnitt wird der finale Datensatz zunächst erstellt und anschließend als .csv Datei exportiert.
+Dazu werden aus dem erstellten finalen Dataframe nochmal über einen inner_join nur die für diese Case study relevanten Gemeinden gefiltert mittels oem_integrated_geo.
+```{r, message=FALSE, warning = FALSE, cache = TRUE}
+
+finaler_dataframe <- inner_join(final_df,oem_integrated_geo, by = "ID_Fahrzeug")
+
+write.csv(finaler_dataframe, "finaler_Datensatz_CaseStudy7.csv", row.names = TRUE)
+
+```
+
+
 ## Auswertung
 
-Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. 
+Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. Die genauen Aufgaben und Funktionen der App sind in der Aufgabenstellung weiter oben in der Dokumentation beschrieben.
 
 ### Implementierung Shiny-App
 
-Der erste Schritt bei der Implementierung der Shiny-App sind zunächst die nötigen R-Pakete zu installieren. Hier sind es 'leaflet' und 'ggplot2'. Weiterhin wurde der ebenfalls noch der Datenanalyse zugrundeliegende finale Datensatz importiert.
+Der erste Schritt bei der Implementierung der Shiny-App sind zunächst die nötigen R-Pakete zu installieren. Für die Dashboard-Elemente wurden folgende Pakete, wenn nötig installiert: "shiny", "shinythemes", "ggplot2", "ggmap", "shinydashboard". 
+Es wurde zudem noch folgende Libarys eingebunden für die Applikation:
+library(shinydashboard),library(shiny),library(leaflet),library(ggplot2),library(dplyr),library(DT),library(lubridate),library(readr) und library(ggmap).
+Der finale Datensatz "finaler_Datensatz_CaseStudy.csv" wurde zudem eingelese und importiert.
 
-#### User Interface
+Ein Teil der Kriterien der App war, das Layout  an das Unternehmen anzupassen. Die Unternehmensfarbe ist Lightsteelblue und lässt sich in der Applikation an ausgewählten Stellen wiederfinden. Gleichzeitig wird das Implementieren dieser Farbe auf ein Maß begrenzt, welches die Übersichtlichkeit der App nicht negativ beeinflusst.
+Es wurde, wie gefordert, ein selbsterstelltes Logo mit in das Layout integriert. Das Logo verwendet ebenfaslls die Unternehmensfarbe Lightsteelblue.
 
+#### Benutzeroberfläche
+
+Zunächst wurde die Benutzeroberfläche(UI) implementiert. Hier wird die Schnittstelle, eingebunden mit der der Benutzer mit der App interagieren kann. Die verschiedenen Auswahlmöglichkeiten und Anwendungen werden im folgenden Verlauf der Dokumentation an gegebener Stelle erläutert. Es wurde sich hierbei an der oben beschriebenen Anforderungen an die Visualierung der App orientiert.
+
+Der Benutzer kann mit der Seitenleiste der Applikation interagieren und sich dabei die visualierten Ergebnisse für eine ausgewählte Gemeinde, für einen ausgwählten Monat und ein ausgewähltes Teil anzeigen lassen. Gesamtergbenisse für alle Gemeinden und alle Monate sind ebenso möglich. Es sind so diese Funktionen für den Benutzer möglich:
+
+*Das Auswählen aller oder einer einzelen Gemeinde. Es werde hier die acht Orte, in den die Autowerkstätte Betrieben werden als Auswahlmöglichkeiten angezeigt. Dabei wird die RadioButtons()-Funktion verwendet um eine Gruppe an Optionsfeldern, in diesem Fall die Gemeinden in der Shiny-App anzugeben.
+
+*Das Auswählen aller oder eines Monats. Hierbei sind die Jahre 2014-2016 berücksichtigt. Es wurde erneut die RadioButtons()-Funktion verwendet.
+
+*Das Auswählen eines Einzelteils von T01 bis T40, wobei 28,29 nicht im Datensatz enthalten sind. Mit uiOutput wird hier die Auwahl eines Bauteils implementiert.
+
+*Die Anzeige der Prognose für das erste Quartal 2017 des vorher ausgewählten Bauteil. Mit uiOutput wird hier die dynamische Box implementiert.
 
 
 ![User Eingaben](User Interaktionen.jpg)
+Nach der Seitenleiste wurde das Main-Panel integriert. Dabei orientiert sich dieser Bereich an den oben genannten Aufgaben der App, Es wurde so jeweils eine Registerkarten angelegt, für jeden Bereich der Visualisieurng. Der Benutzer kann hier also zwischen dem Balkendiagramm, dem Ausfallverlauf, der interaktiven Karte und der Datentabelle navigieren. 
 
-### App Features
+NOCH ZU TUN: Screenshot von den 4 Registerkarten
+
+## Ergebnis
+
+Mit den beschriebenen Funktionen lassen sich die Ergebnisse in der Shiny-App visualisieren und entsprchend der Aufgabenstellung von oben anpassen.
+
+### Funktion der Shiny-App
+
+Im Server sind die Ausgaben und Ergebnisse, die in den Anzeigen der App zu sehen sind, erstellt worden. Dabei wurden sogenannte reative Funktionen genutzt. Diese ändern die Ausgabe ihres Ergebnisses und reagieren auf die Eingabe des Benutzers.
 
 #### Balkendiagramm 
 
 ![Balkendiagramm](Balkendiagramm.jpg)
-
-Der erste Tab der Shiny-App zeigt eine Balkendiagramm, indem die kumulierten Fehler pro Monat für alle Bauteile in einer Gemeinde zu sehen sind. Die Standard-Anzeige zeigt zunächst die Fehler aller Bauteile für alle Gemeinden an. Diese ist zusätzlich auf beliebige Gemeinden anwendbar und wird über den Anzeigemodus auf der linken Seite gesteuert. Hierbei kann man über ein Dropdown-Menü die gewünschte Gemeinde auswählen. Weiterhin ist es möglich die Daten für einen gezielten Monat ausgeben zu lassen.
+Die erste Registerkarte der Shiny-App zeigt ein Balkendiagramm, in dem die kumulierten Fehler pro Monat für alle Bauteile zu sehen sind. Die Standard-Anzeige zeigt zunächst die Fehler aller Bauteile für alle Gemeinden an. Links vom Balkendiagramm befindet sich ein Auswahlmenü, um die benötigte Analyse zu modifizieren.
+Es lassen sich entweder alle Gemeinden oder eine bestimmte Gemeinde aus den genannten Städten wählen. 
+Desweiteren ändert sich das Diagramm für den Auswahl eines bestimmten Monats ebenso und gibt hier die gestapelten fehlerhaften Einzelteile in einem bestimmten Monat zurück.
 
 #### Ausfallverlauf
 
 ![Ausfallverlauf](Ausfallverlauf.jpg)
 
-Der zweite Tab zeigt den Aufallverlauf für ein explizites Teil, welches ebenfalls über ein dropdown-Menü ausgesucht werden kann. Ebenfalls ist unter der Auswahloption des gewünschten Teils eine Prognose der Ausfälle für das erste Quartal im Jahr 2017 verzeichnet.
+Der zweite Tab zeigt den Aufallverlauf für ein explizites Teil. Das Auswahlmenü funktioniert hier ebenso wie beim Balkendiagramm. Zu erwählen ist hier, dass bei der Auwahlkombination ein Monat und eine Gemeinde eine Fehlermeldung ausgegeben wird.
+Hier in dem Beispiel wird der Ausfallverlauf der Jahre 2014-2016 angezeigt. Dabei befindet sich die Zeit auf der x-Achse und die Anzahl der Ausfälle auf der y-Achse. DIe schwarzen Punkten auf dem Graph markieren die Ausfallmenge in dem jeweiligen Monat. 
+
+####Prognose
+
+Darüber hinaus wird beim Auswählen eines bestimmten Bauteils, eine Prognose im dynamischen Feld angezeigt. Dieser Wert verändert sich jeweils für die ausgwählte Gemeinde, lässt sich jeodch auch für alle Gemeinden ausgeben lassen.
+In diesem Beispiel werden für Bauteil 3 acht Ausfälle in Aachen im ersten Quartal 2017 prognostiziert
 
 #### Karte 
 
 ![Karte](Karte.jpg)
-Der dritte Tab zeigt eine interaktive Karte. Dort sind die Städte mit den Werkstätten markiert, diese Markierungen besitzen einen Pop-up, der die empfohlende Stückzahl für das Jahr 2017 zeigt.
-
+Der dritte Tab zeigt eine interaktive Karte. Das Auwahl für den Benutzer bleibt unverändert. Alleine das Auswählen eines betstimmten Bauteils hat jedoch Auswirkungen auf die Karte und ihrer Anzeige.
+In der Karte selbst sind dabeei die acht Gemeinden der Werkstätten mit blauen Markern hervorgehoben. An diesen Markern ist ein Pop-up integriert, welche die Prognosen für 2017 der jeweiligen Gemeinde anzeigt. Dabei bezieht sich diese Prognose, wie beschrieben nur auf das ausgwählte Einzelteil.
 
 #### Datentabelle
 
 ![Datentabelle](Datentabelle.jpg)
 
-Der letzte Tab zeigt eine Tabelle, dieser enthält die für die Auswertung genutzten zugrundeliegende Datensatz. Der User kann hier ebenfalls mit der Search-Funktion nach Teilen oder Städten filtern.
+Der letzte Registerkarte zeigt abschließend eine Tabelle. Diese enthält den für die Auswertung zugrundeliegenden Datensatz. Dabei werden nur die für die Visualisierung relevanten Daten in der Tabelle angezeigt.
+In der Tabelle sind eine Nummerierung, der Gemeindenamen, das Jahr, der Monat und die Anzahl der Ausfälle als Spaltenköpfe dargestellt. Die Spalten lasen sich dabei über Pfeile neben den Spaltennamen aufsteigend oder absteigend sortieren.
+Über ein Auswahlmenü am unteren Rand können die 107 Seiten angesteuert werden. Falls der User aus der Tabelle mit 1061 Einträgen, sich ein bestimmtes Ergebnis anzeigen lassen möchte, kann er das integrierte Suchfenster in der rechten oberen Ecke zum Filtern benutzen.
 
 
-## Ergebnis
+
+
+
+
+
+
+
