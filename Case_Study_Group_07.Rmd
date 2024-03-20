@@ -126,7 +126,7 @@ Dieser enthält die Informationen zur FahrzeugID, den Gemeinden und das Zulassun
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 # Einlesen der Daten
-zulassungen <- fread("Data/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
+zulassungen <- fread("Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv", header = TRUE, data.table = FALSE, encoding = "Latin-1" )
 
 # Analyse der Zulassungsgemeinden
 einzigartige_werte <- zulassungen %>%
