@@ -298,10 +298,11 @@ server <- function(input, output, session) {
     ggplot(filteredData2(), aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_fill_viridis_d() +
-      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil", 
-           title = "Kumulierte Fehler pro Monat für alle Bauteile in ausgewählter Gemeinde") +
+      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", fill = "Bauteil") +
+      ggtitle("Kumulierte Fehler pro Monat für alle Bauteile in der ausgewählten Gemeinde") +
       theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            plot.title = element_text(hjust = 0.5))
   })
   
   # Reaktive Funktion zur Berechnung der Prognose
@@ -404,11 +405,12 @@ server <- function(input, output, session) {
     plot <- ggplot(daten, aes(x = MonatJahr, y = Anzahl, fill = Bauteil)) +
       geom_line() +
       geom_point() +
-      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", color = "Bauteil",
-           title = "Ausfallverlauf von 2014 bis 2016 für jedes Einzelteil") +
+      labs(x = "Monat und Jahr", y = "Anzahl der Fehler", color = "Bauteil") +
+      ggtitle(paste("Ausfallverlauf von 2014 bis 2016 für das Einzelteil", input$BauteilAuswahl)) +
       theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      ylim(y_min, y_max)  
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            plot.title = element_text(hjust = 0.5)) +
+      ylim(y_min, y_max)
     
     # Rückgabe des erstellten Plots
     return(plot)
