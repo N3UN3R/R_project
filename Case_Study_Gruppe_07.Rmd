@@ -14,11 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# Aufgabe
-## Hintergrund
+##Aufgabe
+### Hintergrund
 Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
 
-## Aufgabenstellung
+### Aufgabenstellung
 Ziel dieser Case Study ist die Analyse der historischen Daten der letzten drei Jahre (2014 bis 2016) und die darauf basierende Prognose des Bedarfs an Ersatzeinzelteilen für jede Werkstatt in oben genannten Städten.
 
 Dabei soll zu Analyse der Problemstellung der Case Study eine interaktive Applikation entwicklet werden. Die Ergebnisse werden durch die App visualisiert. 
@@ -34,7 +34,7 @@ Nachdem die relevanten Daten importiert und gemäß den Prinzipien von 'tidy dat
 * Der finale Datensatz soll mit allen notwendigen Eigenschaften als Beweis in Tabellenform abschließend angezeigt werden.
 
 
-#Datenanalyse
+##Datenanalyse
 
 Nachfolgend wird die Analyse und Aufarbeitung der Daten erläutert. Hierzu wird zunächst anhand eines Schaubilds erläutert, wie die Datensätze zusammenhängen.
 Die Auswertung der Datensätze hat das Ziel einen finalem dataframe bzw. eine finale .csv Datei zu erstellen, welcher als Ausgangsbasis für die spätere Darstellung in der Shiny-App dient.
@@ -58,12 +58,12 @@ install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2",
 ```
 
 
-# Datenimport und Datenbereinigung
+## Datenimport und Datenbereinigung
 
 Aus Gründen der Übersichtlichkeit wurden die Schritte des Datenimports und der Datenaufbereitung bewusst so zusammengefasst, dass Schritte gut nachvollziehbar sind und ein möglichst speicherplatzoptimiertes Skript entsteht.
 
 
-## Hilfsfunktionen zur Datenbereinigung
+# Hilfsfunktionen zur Datenbereinigung
 Die Hilfsfunktionen dienen immer wieder zu Datenaufarbeitungsschritten und werden deshalb am Anfang des Skriptes definiert.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -115,7 +115,7 @@ merge_columns <- function(df) {
 ```
 
 
-## Einlesen der Fahrzeugzulassungen
+### Einlesen der Fahrzeugzulassungen
 
 Lese "Zulassungen_alle_Fahrzeuge.csv" als erste Datei ein.
 Aufgrund von schlechter Datenqualität werden fehlerhafte Daten durch Anwendung der oben erzeugten Hilfsfunktionen eresetzt und korrigiert.
@@ -172,7 +172,7 @@ glimpse(zulassungen_filtered)
 ```
 
 
-## Einlesen der Fahrzeugdaten für jeden OEM Typ
+### Einlesen der Fahrzeugdaten für jeden OEM Typ
 
 Nachfolgend werden die entsprechenden .csv Dateien eingelesen.
 Diese enthalten für jeden Fahrzeugtyp die verbauten Komponenten.
@@ -214,7 +214,7 @@ glimpse(oem_integrated)
 
 
 
-## Einlesen der Geodaten 
+### Einlesen der Geodaten 
 
 Nachfolgend werden die für diese Analyse relevanten Geodaten aus der Datei "Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv" eingelesen.
 Der dadurch entstandene Dataframe "geodaten" wird anschließend mit der dem bereits zuvor erstellten Dataframe oem_integrated zusammengefügt.
@@ -240,7 +240,7 @@ glimpse(oem_integrated_geo)
 ```
 
 
-## Einlesen von Fahrzeugbestandteilen
+### Einlesen von Fahrzeugbestandteilen
 
 Im nächsten Schritt werden die Fahrzeugbestandteile eingelesen.
 Die Bestandteile widerum enthalten Informationen zu den Komponenten des Fahrzeugs.
@@ -272,7 +272,7 @@ bestandteile_Typ22 <- bestandteile_Typ22 %>%
 ```
 
 
-## Analyse der pro Fahrzeugtyp verbauten Komponenten
+### Analyse der pro Fahrzeugtyp verbauten Komponenten
 
 Der nachfolgenbde Code diente lediglich dazu herauszufinden, welche "Keys" bei den jeweiligen Fahrzeugen enthalten sind.
 Für die Analyse ist der Codeabschnitt nicht erforderlich, jedoch aus Gründen der Vollständigkeit enthalten.
@@ -329,7 +329,7 @@ motor_Ids_22_key = unique(sapply(strsplit(bestandteile_Typ22$ID_Motor, "-"), `[`
 ```
 
 
-## Einlesen der Fahrzeugkomponenten
+### Einlesen der Fahrzeugkomponenten
 
 Nachfolgend werden die .csv Dateien der Komponenten eingelesen.
 Zur Besseren Nachvollziehbarkeit wurde auf eine Implementierung mittels for-loop verzichtet.
@@ -387,7 +387,7 @@ bestandteile_carosserie_K7 <-fread("Data/Komponente/Bestandteile_Komponente_K7.c
 ```
 
 
-## Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
+### Vorbereitung zur Erstellung von fahrzeugtypbezogenen Dataframes
 
 Im nachfolgenden Codeabschnitt werden für jeden Fahrzeugtyp Dataframes erstellt, die die entsprechenden Komponenten beinhalten.
 Zur Vermeidung von Fehlern und zur Erhöhung der Nachvollziehbarkeit wurde auf alternative Ansätze des nachfolgenden Codeabschnitts, beispielsweise durch Funktionen, verzichtet.
@@ -535,7 +535,7 @@ bauteile_motor2_typ22 <- inner_join(bestandteile_motor_K1DI2, bestandteile_Typ22
 ```
 
 
-## Erstellen von Dataframes für jeden Fahrzeugtyp
+### Erstellen von Dataframes für jeden Fahrzeugtyp
 
 Erstellen von Dataframes für jeden Fahrzeugtyp mit allen Einzelteil-IDs.
 
@@ -596,7 +596,7 @@ all_ids_typ22 = merge_columns(all_ids_typ22)
 ```
 
 
-## Erstellen eines Teile-Dataframes
+### Erstellen eines Teile-Dataframes
 
 Erstellung eines zusammengeführten Dataframes, der alle zuvor fahrzeugspezifischen Dataframes im vorherigen Schritt zu einem Dataframe zusammenführt.
 Das Ergebnis dieses Codeabschnitts ist der Dataframe "all_df_data".
@@ -617,14 +617,14 @@ glimpse(all_df_data)
 ```
 
 
-## Einlesen der Einzelteil-Dateien
+### Einlesen der Einzelteil-Dateien
 
 Die nachfolgenden Abschnitte beinhalten das Einlesen der Einzelteil-Dateien.
 Aufgrund schlechter Datenqualität und teilweise höherer Komplexität beim Einlesen der Dateien wurde nachfolgend auf for-schleifen oder Funktionen verzichtet, um die Nachvollziehbarkeit zu erhöhen und die Fehleranfälligkeit zu reduzieren.
 Beim Einlesen der Einzelteile wurd für jedes Teil der entsprechende zeitraum gefiltert.
 Das Ergebis des Codeabschnitts ist jeweils ein Dataframe für jedes Einzelteil, welcher alle fehlerhaften Einzelteile in dem entsprechenden Zeitraum enthält.
 
-### Einzelteil T01 einlesen
+#### Einzelteil T01 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
 path = "Data/Einzelteil/Einzelteil_T01.txt"
@@ -646,7 +646,7 @@ names(part_T01)[names(part_T01) == "Fehlerhaft_Fahrleistung"] <- "Fehlerhaft_Fah
 ```
 
 
-### Einzelteil T02 einlesen
+#### Einzelteil T02 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
 path = "Data/Einzelteil/Einzelteil_T02.txt"
@@ -667,7 +667,7 @@ part_T02 = merge_columns(part_T02)
 ```
 
 
-### Einzelteil T03 einlesen
+#### Einzelteil T03 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil_T03.txt")
 txt <- gsub("|",",",txt, fixed = TRUE)
@@ -680,7 +680,7 @@ part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 ```
 
 
-### Einzelteil T04 einlesen
+#### Einzelteil T04 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
   part_T04 <- fread("Data/Einzelteil/Einzelteil_T04.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -690,7 +690,7 @@ part_T03 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 ```
 
 
-### Einzelteil T05 einlesen
+#### Einzelteil T05 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T05 <- fread("Data/Einzelteil/Einzelteil_T05.csv", header = TRUE, data.table = FALSE, drop= c(1,2)) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -701,7 +701,7 @@ part_T05 = merge_columns(part_T05)
 ```
 
 
-### Einzelteil T06 einlesen
+#### Einzelteil T06 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T06 <- fread("Data/Einzelteil/Einzelteil_T06.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -710,7 +710,7 @@ part_T06 <- fread("Data/Einzelteil/Einzelteil_T06.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T07 einlesen
+#### Einzelteil T07 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil_T07.txt")
 txt <- gsub("\"\t\"",",",txt)
@@ -726,7 +726,7 @@ part_T07 <- fread(text = txt, sep = ",", quote = "", data.table = FALSE) %>%
 ```
 
 
-### Einzelteil T08 einlesen
+#### Einzelteil T08 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T08 <- fread("Data/Einzelteil/Einzelteil_T08.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -735,7 +735,7 @@ part_T08 <- fread("Data/Einzelteil/Einzelteil_T08.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T09 einlesen
+#### Einzelteil T09 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 
 part_T09 <- read_file("Data/Einzelteil/Einzelteil_T09.txt") %>% 
@@ -752,7 +752,7 @@ glimpse(part_T09)
 ```
 
 
-### Einzelteil T10 einlesen
+#### Einzelteil T10 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T10 <- fread("Data/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -761,7 +761,7 @@ part_T10 <- fread("Data/Einzelteil/Einzelteil_T10.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T11 einlesen
+#### Einzelteil T11 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil_T11.txt")
 txt <- gsub("\t", ",", txt, fixed = TRUE)
@@ -773,7 +773,7 @@ part_T11 <- fread(text = txt, sep = ",", data.table = FALSE) %>%
 ```
 
 
-### Einzelteil T12 einlesen
+#### Einzelteil T12 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T12 <- fread("Data/Einzelteil/Einzelteil_T12.csv", header = TRUE, data.table = FALSE, drop = c(1,2)) %>% 
     filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
@@ -785,7 +785,7 @@ part_T12 = merge_columns(part_T12)
 ```
 
 
-### Einzelteil T13 einlesen
+#### Einzelteil T13 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T13 <- fread("Data/Einzelteil/Einzelteil_T13.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -794,7 +794,7 @@ part_T13 <- fread("Data/Einzelteil/Einzelteil_T13.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T14 einlesen
+#### Einzelteil T14 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T14 <- fread("Data/Einzelteil/Einzelteil_T14.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -803,7 +803,7 @@ part_T14 <- fread("Data/Einzelteil/Einzelteil_T14.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T15 einlesen
+#### Einzelteil T15 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T15 <- fread("Data/Einzelteil/Einzelteil_T15.csv", header = TRUE, data.table = FALSE, drop= c(1,2)) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -814,7 +814,7 @@ part_T15 = merge_columns(part_T15)
 ```
 
 
-### Einzelteil T16 einlesen
+#### Einzelteil T16 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T16 <- read_file("Data/Einzelteil/Einzelteil_T16.txt") %>%
   str_replace_all(" \\| \\| ", ",") %>%
@@ -840,7 +840,7 @@ part_T17 = merge_columns(part_T17)
 ```
 
 
-### Einzelteil T18 einlesen
+#### Einzelteil T18 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T18 <- fread("Data/Einzelteil/Einzelteil_T18.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -858,7 +858,7 @@ part_T19 <- fread("Data/Einzelteil/Einzelteil_T19.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T20 einlesen
+#### Einzelteil T20 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 #txt <- readLines(paste0(filepath,"Einzelteil/Einzelteil/Einzelteil_T20.txt"))
 txt <- readLines("Data/Einzelteil/Einzelteil_T20.txt")
@@ -871,7 +871,7 @@ part_T20 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2,10)) %
 ```
 
 
-### Einzelteil T21 einlesen
+#### Einzelteil T21 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T21 <- fread("Data/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.table = FALSE,drop = c(1,2,10)) %>% 
   filter(Fehlerhaft == 1 &
@@ -880,7 +880,7 @@ part_T21 <- fread("Data/Einzelteil/Einzelteil_T21.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T22 einlesen
+#### Einzelteil T22 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil_T22.txt")
 txt <- gsub("\"\t\"", ",", txt)
@@ -900,7 +900,7 @@ part_T22 = merge_columns(part_T22)
 ```
 
 
-### Einzelteil T23 einlesen
+#### Einzelteil T23 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T23 <- fread("Data/Einzelteil/Einzelteil_T23.csv", header = TRUE, data.table = FALSE,drop = c(1,2)) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -912,7 +912,7 @@ part_T23 = merge_columns(part_T23)
 ```
 
 
-### Einzelteil T24 einlesen
+#### Einzelteil T24 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil_T24.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -926,7 +926,7 @@ part_T24 = merge_columns(part_T24)
 ```
 
 
-### Einzelteil T25 einlesen
+#### Einzelteil T25 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T25 <- fread("Data/Einzelteil/Einzelteil_T25.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -935,7 +935,7 @@ part_T25 <- fread("Data/Einzelteil/Einzelteil_T25.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T26 einlesen
+#### Einzelteil T26 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T26 <- fread("Data/Einzelteil/Einzelteil_T26.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -944,7 +944,7 @@ part_T26 <- fread("Data/Einzelteil/Einzelteil_T26.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T27 einlesen
+#### Einzelteil T27 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T27 <- read_file("Data/Einzelteil/Einzelteil_T27.txt")%>%
   str_replace_all(" \\| \\| ", ",") %>%
@@ -956,7 +956,7 @@ part_T27 <- fread(part_T27, sep =",", drop = c(1,2))%>%
 ```
 
 
-### Einzelteil T30 einlesen
+#### Einzelteil T30 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T30 <- fread("Data/Einzelteil/Einzelteil_T30.csv", header = TRUE, data.table = FALSE) %>% 
    filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1 | Fehlerhaft == 1 ) &
@@ -968,7 +968,7 @@ part_T30 = merge_columns(part_T30)
 ```
 
 
-### Einzelteil T31 einlesen
+#### Einzelteil T31 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 txt <- readLines("Data/Einzelteil/Einzelteil_T31.txt")
 txt <- gsub("  ",",",txt, fixed = TRUE)
@@ -980,7 +980,7 @@ part_T31 <- fread(text = txt, sep = ",", data.table = FALSE, drop = c(1,2)) %>%
 ```
 
 
-### Einzelteil T32 einlesen
+#### Einzelteil T32 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T32 <- fread("Data/Einzelteil/Einzelteil_T32.csv", header = TRUE, data.table = FALSE, drop = c(1.2)) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -992,7 +992,7 @@ part_T32 = merge_columns(part_T32)
 ```
 
 
-### Einzelteil T33 einlesen
+#### Einzelteil T33 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T33 <- fread("Data/Einzelteil/Einzelteil_T33.csv", header = TRUE, data.table = FALSE) %>% 
   filter(Fehlerhaft == 1 &
@@ -1001,7 +1001,7 @@ part_T33 <- fread("Data/Einzelteil/Einzelteil_T33.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T34 einlesen
+#### Einzelteil T34 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T34 <- read_file("Data/Einzelteil/Einzelteil_T34.txt") %>%
   str_replace_all(" \\| \\| ", ",") %>%
@@ -1013,7 +1013,7 @@ part_T34 <- fread(part_T34, sep = ",", data.table = FALSE, drop = c(1,2,10)) %>%
 ```
 
 
-### Einzelteil T35 einlesen
+#### Einzelteil T35 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T35 <- read_file("Data/Einzelteil/Einzelteil_T35.txt") %>%
   str_replace_all("\\\\", ", ") %>%
@@ -1027,7 +1027,7 @@ part_T35 = merge_columns(part_T35)
 ```
 
 
-### Einzelteil T36 einlesen
+#### Einzelteil T36 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 # Dateipfad zur Textdatei
 dateipfad <- "Data/Einzelteil/Einzelteil_T36.txt"
@@ -1045,7 +1045,7 @@ part_T36 <- data.frame(part_T36) %>%
 ```
 
 
-### Einzelteil T37 einlesen
+#### Einzelteil T37 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T37 <- fread("Data/Einzelteil/Einzelteil_T37.csv", header = TRUE, data.table = FALSE, drop = c(1,2,10)) %>% 
   filter(Fehlerhaft == 1 &
@@ -1054,7 +1054,7 @@ part_T37 <- fread("Data/Einzelteil/Einzelteil_T37.csv", header = TRUE, data.tabl
 ```
 
 
-### Einzelteil T38 einlesen
+#### Einzelteil T38 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T38 <- fread("Data/Einzelteil/Einzelteil_T38.csv", header = TRUE, data.table = FALSE, drop = c(1,2)) %>% 
  filter((Fehlerhaft.x == 1 | Fehlerhaft.y == 1) &
@@ -1065,7 +1065,7 @@ part_T38 = merge_columns(part_T38)
 ```
 
 
-### Einzelteil T39 einlesen
+#### Einzelteil T39 einlesen
 ```{r message=FALSE, warning=FALSE, cache=FALSE}
 part_T39 <- read_file("Data/Einzelteil/Einzelteil_T39.txt") %>%
   str_replace_all("\\\\", ",") %>%
@@ -1079,7 +1079,7 @@ part_T39 = merge_columns(part_T39)
 ```
 
 
-### Einzelteil T40 einlesen
+#### Einzelteil T40 einlesen
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
 part_T40 <- fread("Data/Einzelteil/Einzelteil_T40.csv", header = TRUE, data.table = FALSE, drop = c(1,2,10)) %>% 
   filter(Fehlerhaft == 1 &
@@ -1089,10 +1089,10 @@ part_T40 = merge_columns(part_T40)
 ```
 
 
-# Erstellen des finalen Datensatzes
+## Erstellen des finalen Datensatzes
 
 
-## Erstellen des ersten finalen Dataframes für T01
+#### Erstellen des ersten finalen Dataframes für T01
 
 Die Erstellung des finalen Datensatzes ist ein iterativer Prozess.
 Hierfür wird in einem ersten Schritt zunächst der finale Datensatz für T01 erstellt.
@@ -1117,7 +1117,7 @@ final_df_T01 <- inner_join(all_df_selection_T01, selection_part_T01, by = "ID_T0
 ```
 
 
-## Erstellen des finalen Dataframes
+#### Erstellen des finalen Dataframes
 
 Basierend auf dem Ausgangsdataframe (final_df_T01) wird nun anschließend mittels einer for-Schleife für jedes Einzelteil der entsprechende Dataframe erstellt und anschließend mittels full_join an den bestehenden Dataframe angefügt.
 
@@ -1170,7 +1170,7 @@ for(part_name in part_list) {
 ```
 
 
-## Finaler Datensatz
+### Finaler Datensatz
 
 Im nachfolgenden Abschnitt wird der finale Datensatz zunächst erstellt und anschließend als .csv Datei exportiert.
 Dazu werden aus dem erstellten finalen Dataframe nochmal über einen inner_join nur die für diese Case study relevanten Gemeinden gefiltert mittels oem_integrated_geo.
@@ -1184,11 +1184,11 @@ write.csv(finaler_dataframe, "finaler_Datensatz_CaseStudy7.csv", row.names = TRU
 ```
 
 
-# Auswertung
+## Auswertung
 
 Um nun die finalen Daten auszuwerten, wurde eine Shiny-App erstellt. Ziel der App ist es eine übersichtliche Darstellung der Daten zu geben. Die genauen Aufgaben und Funktionen der App sind in der Aufgabenstellung weiter oben in der Dokumentation beschrieben.
 
-## Implementierung Shiny-App
+### Implementierung Shiny-App
 
 Der erste Schritt bei der Implementierung der Shiny-App sind zunächst die nötigen R-Pakete zu installieren. Für die Dashboard-Elemente wurden folgende Pakete, wenn nötig installiert: "shiny", "shinythemes", "ggplot2", "ggmap", "shinydashboard". 
 Es wurde zudem noch folgende Libarys eingebunden für die Applikation:
@@ -1198,7 +1198,7 @@ Der finale Datensatz "finaler_Datensatz_CaseStudy.csv" wurde zudem eingelese und
 Ein Teil der Kriterien der App war, das Layout  an das Unternehmen anzupassen. Die Unternehmensfarbe ist Lightsteelblue und lässt sich in der Applikation an ausgewählten Stellen wiederfinden. Gleichzeitig wird das Implementieren dieser Farbe auf ein Maß begrenzt, welches die Übersichtlichkeit der App nicht negativ beeinflusst.
 Es wurde, wie gefordert, ein selbsterstelltes Logo mit in das Layout integriert. Das Logo verwendet ebenfaslls die Unternehmensfarbe Lightsteelblue.
 
-## Benutzeroberfläche
+### Benutzeroberfläche
 
 Zunächst wurde die Benutzeroberfläche(UI) implementiert. Hier wird die Schnittstelle, eingebunden mit der der Benutzer mit der App interagieren kann. Die verschiedenen Auswahlmöglichkeiten und Anwendungen werden im folgenden Verlauf der Dokumentation an gegebener Stelle erläutert. Es wurde sich hierbei an der oben beschriebenen Anforderungen an die Visualierung der App orientiert.
 
@@ -1221,11 +1221,11 @@ Der Benutzer kann mit der Seitenleiste der Applikation interagieren und sich dab
 Nach der Seitenleiste wurde das Main-Panel integriert. Dabei orientiert sich dieser Bereich an den oben genannten Aufgaben der App, Es wurde so jeweils eine Registerkarten angelegt, für jeden Bereich der Visualisieurng. Der Benutzer kann hier also zwischen dem Balkendiagramm, dem Ausfallverlauf, der interaktiven Karte und der Datentabelle navigieren. 
 
 
-# Ergebnis
+## Ergebnis
 
 Mit den beschriebenen Funktionen lassen sich die Ergebnisse in der Shiny-App visualisieren und entsprchend der Aufgabenstellung von oben anpassen.
 
-## Funktion der Shiny-App
+### Funktion der Shiny-App
 
 Im Server sind die Ausgaben und Ergebnisse, die in den Anzeigen der App zu sehen sind, erstellt worden. Dabei wurden sogenannte reaktive Funktionen genutzt. Diese ändern die Ausgabe ihres Ergebnisses und reagieren auf die Eingabe des Benutzers.
 
