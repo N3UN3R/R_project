@@ -34,7 +34,7 @@ Logistikverzug_K7 <- read.csv("Data/Logistikverzug/Logistikverzug_K7.csv",sep=";
 
 ```
 
-In dieser Aufgabe untersuchen wir die Verteilung des Logistikverzugs der Komponente K7. Zunächst einmal werden die beiden eingelesenden Datasets zu Logistikverzug zusammengefügt.
+In dieser Aufgabe untersuchen wir die Verteilung des Logistikverzugs der "Komponente K7". Zunächst einmal werden die beiden eingelesenden Datasets zu Logistikverzug zusammengefügt.
 Dies passiert unter der Angabe der IDNummer.
 Im nächsten Schritt werden die Produktionsdaten gefiltert, sodass nur die Daten von 2014 bis 2016 betrachtet werden.
 ```{r,message=FALSE,warning=FALSE}
@@ -53,9 +53,9 @@ Logistikverzug$Wareneingang <- as.Date(strptime(Logistikverzug$Wareneingang, for
 
 ```
 
-Nun wird der Verzug berechnet. Hierbei ist zu beachten, dass zwischen dem Produktionsdatum und dem Warenausgangsdatum 2 Werktage liegen, da der Hersteller 1 Tag für die Übergabe zur Logistikabteilung und ebenfalls 1 Tag für die Versandvorbereitung benötigt. Da der Sonntag kein Werktag ist, ist dieser von der Rechnung ausgeschlossen.
+Nun wird der Verzug berechnet. Hierbei ist zu beachten, dass zwischen dem Produktionsdatum und dem Warenausgangsdatum zwei Werktage liegen, da der Hersteller ein Tag für die Übergabe zur Logistikabteilung und ebenfalls ein Tag für die Versandvorbereitung benötigt. Da der Sonntag kein Werktag ist, ist dieser von der Rechnung ausgeschlossen.
 
-Da der Sonntag kein Werktag ist, muss dieser aus dem Verzug rausgerechnet werden. Dafür wird die Funktion anzahl_sonntage bestimmt. Sie berechnet die Anzahl der Sonntage zwischen dem Produktionsdatum und dem Enddatum. Danach wird eine neue Spalte namens Verzug_ohne_Sonntage erstellt, indem für jeden Eintrag in "Logistikverzug" die Differenz in Tagen zwischen dem Wareneingangsdatum und dem Produktionsdatum berechnet wird. Diese Differenz wird dann um die Anzahl der Sonntage zwischen diesen beiden Daten reduziert. Das Ergebnis wird in der Spalte Verzug_ohne_Sonntage gespeichert.
+Da der Sonntag kein Werktag ist, muss dieser aus dem Verzug rausgerechnet werden. Dafür wird die Funktion "anzahl_sonntage" bestimmt. Sie berechnet die Anzahl der Sonntage zwischen dem Produktionsdatum und dem Enddatum. Danach wird eine neue Spalte namens "Verzug_ohne_Sonntage" erstellt, indem für jeden Eintrag in "Logistikverzug" die Differenz in Tagen zwischen dem Wareneingangsdatum und dem Produktionsdatum berechnet wird. Diese Differenz wird dann um die Anzahl der Sonntage zwischen diesen beiden Daten reduziert. Das Ergebnis wird in der Spalte "Verzug_ohne_Sonntage" gespeichert.
 ```{r,message=FALSE,warning=FALSE}
 
 anzahl_sonntage <- function(produktionsdatum, enddatum) {
@@ -69,7 +69,7 @@ anzahl_sonntage <- function(produktionsdatum, enddatum) {
 ```
 
 Die Spalte "gesamt" wird erstellt, um den Gesamtverzug für jeden Eintrag zu berechnen. Dabei wird einfach die Differenz in Tagen zwischen dem Wareneingangsdatum und dem Produktionsdatum berechnet und gespeichert. Durch die Verwendung von sapply werden die Berechnungen für jeden Eintrag in "Logistikverzug" durchgeführt. 
-Im Endeffekt wird vom Gesamtverzug die Anzahl der Sonntage und die 2 Tage für das Übergeben an die Logistikabteilung/Versandvorbereitung abgezogen.
+Im Endeffekt wird vom Gesamtverzug die Anzahl der Sonntage und die zwei Tage für das Übergeben an die Logistikabteilung/Versandvorbereitung abgezogen.
 ```{r,message=FALSE,warning=FALSE}
 
 Logistikverzug$Verzug_ohne_Sonntage <- sapply(1:nrow(Logistikverzug), function(i) {
@@ -164,7 +164,7 @@ print(mittelwert_verzug)
 Der Mittelwert des Verzugs liegt bei etwa 3.08 Werktage, also knapp über 3 Werktage.
 
 ## d)
-**Stellen Sie die Vertilung in geeigneter Weise mit Plotly dar**
+**Stellen Sie die Verteilung in geeigneter Weise mit Plotly dar**
 
 ```{r, fig.align="center", message = FALSE, warning = FALSE}
 
@@ -205,7 +205,7 @@ Es können Beziehungen zwischen den verschiedenen Tabellen hergestellt werden. D
 
 **Wie viele der Komponenten K7 landeten in Fahrzeugen, die in Wehr, Landkreis Waldshut zugelassen wurden?**
 
-Als erstes wird die Funktion lese_bestandteile_datei definiert, die den Pfad zu den Komponentendateien basierend auf dem Hersteller (OEM) und dem Typ der Komponente erhält und dann die entsprechende CSV-Datei einliest.
+Als erstes wird die Funktion "lese_bestandteile_datei definiert", die den Pfad zu den Komponentendateien basierend auf dem Hersteller (OEM) und dem Typ der Komponente erhält und dann die entsprechende CSV-Datei einliest.
 ```{r message=FALSE, warning=FALSE}
 
 lese_bestandteile_datei <- function(oem, typ) {
@@ -216,8 +216,8 @@ lese_bestandteile_datei <- function(oem, typ) {
 ```
 
 Anschließend werden verschiedene Dateien eingelesen.
-Bei Bauteil K7 handelt es sich um die Karosserie. Aus der Komponente_K7.txt-Datei wird erstmal nur die Spalte ID_Karosserie benötigt. Die benötigte Spalte ID_Karosserie wird mittels select() gewählt und aus der TXT-Datei eingelesen und in ein tibble konvertiert. 
-Die relevanten Spalten der Zulassungen-Datei werden ebenfalls mit select() ausgewählt und aus der Zulassungen_alle_Fahrzeuge.csv Datei eingelesen. Die Spalte IDNummer wird zu ID_Fahrzeug umbenannt, um später Daten mithilfe dieser Spalte verbinden zu können.
+Bei "Bauteil K7" handelt es sich um die Karosserie. Aus der "Komponente_K7.txt-Datei" wird erstmal nur die Spalte ID_Karosserie benötigt. Die benötigte Spalte "ID_Karosserie" wird mittels select() gewählt und aus der TXT-Datei eingelesen und in ein tibble konvertiert. 
+Die relevanten Spalten der Zulassungen-Datei werden ebenfalls mit select() ausgewählt und aus der "Zulassungen_alle_Fahrzeuge.csv-Datei" eingelesen. Die Spalte IDNummer wird zu ID_Fahrzeug umbenannt, um später Daten mithilfe dieser Spalte verbinden zu können.
 ```{r message=FALSE, warning=FALSE}
 
 k7_neu <- read.table("Data/Komponente/Komponente_K7.txt", sep = "\t", stringsAsFactors = FALSE) %>%
@@ -228,7 +228,7 @@ zulassungen_neu <- read_csv2("Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")%
 
 ```
 
-Nun wird die lese_bestandteile_datei Funktion verwendet, um die komponenten_OEM-Dateien einzulesen. Es werden nur die Spalten ID_Fahrzeug und ID_Karosserie ausgewählt. Die Dataframes der verschiedenen OEMs und Typen werden mittels bind_rows zu einem einzigen Dataframe namens komponenten_gesamt zusammengeführt.
+Nun wird die "lese_bestandteile_datei" Funktion verwendet, um die "komponenten_OEM-Dateien" einzulesen. Es werden nur die Spalten "ID_Fahrzeug" und "ID_Karosserie" ausgewählt. Die Dataframes der verschiedenen OEMs und Typen werden mittels bind_rows zu einem einzigen Dataframe namens "komponenten_gesamt" zusammengeführt.
 ```{r message=FALSE, warning=FALSE}
 
 komponenten_gesamt <- bind_rows(
@@ -240,7 +240,7 @@ komponenten_gesamt <- bind_rows(
 
 ```
 
-Im Folgenden werden k7_neu, komponenten_gesamt und zulassungen_neu mittels left_join zusammengeführt.
+Im Folgenden werden "k7_neu", "komponenten_gesamt" und "zulassungen_neu" mittels "left_join" zusammengeführt.
 ```{r message=FALSE, warning=FALSE}
 
 enddaten <- left_join(k7_neu, komponenten_gesamt, by = "ID_Karosserie") %>%
@@ -258,7 +258,7 @@ fahrzeuge_wehr_k7 <- enddaten %>%
 fahrzeuge_wehr_k7
 
 ```
-Es gibt 6 Fahrzeuge, die die Komponente K7 enthalten und in Wehr zugelassen wurden.
+Es gibt 6 Fahrzeuge, die die "Komponente K7" enthalten und in Wehr zugelassen wurden.
 
 
 ## Aufgabe 4 
@@ -273,7 +273,7 @@ str(zulassungen)
 colnames(zulassungen)
 
 ```
-Es ist zu erkennen, dass die Zulassungstabelle 4 Spalten besitzt: "...1" als numeric double, "IDNummer" als character, "Gemeinde" als character und "Zulassung" als date.
+Es ist zu erkennen, dass die Zulassungstabelle vier Spalten besitzt: "...1" als numeric double, "IDNummer" als character, "Gemeinde" als character und "Zulassung" als date.
 
 Hier wird die dazugehörige Tabelle erstellt, die die Spaltennamen und die entsprechenden Datentypen enthält. Dies geschieht durch Extrahieren der Klassennamen der einzelnen Spalten mit der Funktion class() und anschließendes Zusammenführen in einem Dataframe. Die Tabelle wird schließlich mit kable() formatiert und ausgegeben.
 ```{r, message = FALSE, warning = FALSE}
