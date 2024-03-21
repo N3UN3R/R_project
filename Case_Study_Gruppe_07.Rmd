@@ -15,10 +15,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ##Aufgabe
-### Hintergrund
+###Hintergrund
 Die Autowerkstattskette in Nordrhein-Westfalen betreibt Werkstätten in Köln, Dortmund, Bielefeld, Bonn, Oberhausen, Bochum, Münster und Aachen. Das Management hat die Aufgabe an das Team delegiert, den Bedarf an Ersatzeinzelteilen für das kommende Kalenderjahr zu kalkulieren. Die Analyse basiert auf den Daten der letzten drei Jahre (2014 bis 2016), wobei davon ausgegangen wird, dass Fahrzeuge mit Fehlern in der Stadt repariert wurden, in der sie zugelassen sind.
 
-### Aufgabenstellung
+###Aufgabenstellung
 Ziel dieser Case Study ist die Analyse der historischen Daten der letzten drei Jahre (2014 bis 2016) und die darauf basierende Prognose des Bedarfs an Ersatzeinzelteilen für jede Werkstatt in oben genannten Städten.
 
 Dabei soll zu Analyse der Problemstellung der Case Study eine interaktive Applikation entwicklet werden. Die Ergebnisse werden durch die App visualisiert. 
@@ -40,7 +40,7 @@ Nachfolgend wird die Analyse und Aufarbeitung der Daten erläutert. Hierzu wird 
 Die Auswertung der Datensätze hat das Ziel einen finalem dataframe bzw. eine finale .csv Datei zu erstellen, welcher als Ausgangsbasis für die spätere Darstellung in der Shiny-App dient.
 
 
-### Library 
+###Library 
 Für die Durchführung der folgenden datengestützten Analyse sind mehrere **R-Pakete** erforderlich. Insbesondere sind folgend diese Pakete benutzt worden:
 
 
@@ -58,12 +58,12 @@ install_load("dplyr", "readr", "data.table",  "shiny", "tidyr", "DT", "ggplot2",
 ```
 
 
-## Datenimport und Datenbereinigung
+###Datenimport und Datenbereinigung
 
 Aus Gründen der Übersichtlichkeit wurden die Schritte des Datenimports und der Datenaufbereitung bewusst so zusammengefasst, dass Schritte gut nachvollziehbar sind und ein möglichst speicherplatzoptimiertes Skript entsteht.
 
 
-# Hilfsfunktionen zur Datenbereinigung
+#### Hilfsfunktionen zur Datenbereinigung
 Die Hilfsfunktionen dienen immer wieder zu Datenaufarbeitungsschritten und werden deshalb am Anfang des Skriptes definiert.
 
 ```{r, message=FALSE, warning = FALSE, cache = TRUE}
@@ -456,7 +456,7 @@ bauteile_schaltung2_typ22 <- inner_join(bestandteile_schaltung_K3SG2, bestandtei
   select(ID_T21, ID_T22, ID_T26, ID_Fahrzeug, ID_Schaltung)
 
 
-# Matching sitze
+# Matching Sitze
 # type 11 hat die Sitze "K2LE1" "K2ST1"
 bauteile_sitze1_typ11 <- inner_join(bestandteile_sitze_K2LE1, bestandteile_Typ11, by = c("ID_K2LE1" = "ID_Sitze")) %>%
   rename(ID_Sitze = ID_K2LE1) %>%
